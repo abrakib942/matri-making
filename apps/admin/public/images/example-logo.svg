@@ -1,0 +1,13 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle/icon -->
+  <circle cx="30" cy="30" r="20" fill="currentColor" opacity="0.1"/>
+  <circle cx="30" cy="30" r="15" fill="currentColor" opacity="0.2"/>
+
+  <!-- Letter/Icon in the circle -->
+  <text x="30" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="currentColor" text-anchor="middle">E</text>
+
+  <!-- Company/App Name -->
+  <text x="60" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="currentColor">Example</text>
+  <text x="60" y="42" font-family="Arial, sans-serif" font-size="12" fill="currentColor" opacity="0.7">Admin Panel</text>
+</svg>
+

@@ -1,0 +1,27 @@
+// Minimal CSS for layout - only webkit-specific features that can't be done in Tailwind
+
+// Custom scrollbar for sidebar (webkit-specific)
+.layout-sidebar-scrollbar {
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--surface-border);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--text-color-secondary);
+    }
+}
+
+// Blocked scroll for mobile when sidebar is open
+.blocked-scroll {
+    overflow: hidden;
+}
+

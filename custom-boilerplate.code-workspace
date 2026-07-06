@@ -1,0 +1,32 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": ".",
+    },
+    {
+      "name": "api (@repo/api)",
+      "path": "apps/api",
+    },
+    {
+      "name": "admin (@repo/admin)",
+      "path": "apps/admin",
+    },
+    {
+      "name": "web (@repo/web)",
+      "path": "apps/web",
+    },
+    {
+      "name": "storage (@repo/storage)",
+      "path": "apps/storage",
+    },
+    {
+      "name": "packages",
+      "path": "packages",
+    },
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+  },
+}

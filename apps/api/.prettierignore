@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Logs
+*.log
+logs
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package managers
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Prisma
+prisma/migrations
+prisma/generated
+
+# Coverage
+coverage
+.nyc_output
+
+# Cache
+.cache
+.parcel-cache
+
+# TypeScript config files
+tsconfig.json
+tsconfig.*.json
+
+# NestJS config files
+nest-cli.json
+

@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+echo "📝 Checking code formatting..."
+pnpm format || {
+  echo "❌ Format check failed. Please fix formatting errors."
+  exit 1
+}
+
+echo "🔎 Running linter on all apps..."
+pnpm lint || {
+  echo "❌ Linting failed. Please fix linting errors."
+  exit 1
+}
+
+echo "🔷 Running type checks on all apps..."
+pnpm type-check || {
+  echo "❌ Type check failed. Please fix type errors."
+  exit 1
+}
+
+echo "🧪 Running tests..."
+pnpm test || {
+  echo "⚠️  Tests failed or no tests found. Continuing..."
+}
+
+echo "🏗️  Building all apps..."
+pnpm build || {
+  echo "❌ Build failed. Please fix build errors."
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"
+

@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+build
+.next
+out
+*.tsbuildinfo
+
+# Logs
+*.log
+logs
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package managers
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# TypeScript config files
+tsconfig.json
+tsconfig.*.json
+
+# Next.js config files
+next.config.js
+next.config.ts
+next.config.mjs
+
+# Other config files
+tailwind.config.ts
+postcss.config.js
+postcss.config.cjs
+postcss.config.mjs
+eslint.config.js
+eslint.config.mjs
+
+# Next.js generated
+next-env.d.ts
+
+# Coverage
+coverage
+.nyc_output
+
+# Cache
+.cache
+.parcel-cache
+

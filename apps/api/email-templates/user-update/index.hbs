@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>User Information Update</title>
+</head>
+
+<body style="
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    ">
+	<div style="
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      ">
+		<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="
+          margin: auto;
+          max-width: 600px;
+          background-color: #fefdf9;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        ">
+			<tr>
+				<td>
+					<img src="https://example.com/assets/images/example-1920x720.png" alt="" width="200px"
+						height="auto" />
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 20px 0">
+					<p style="font-size: 18px; color: #555555">
+						Hello {{userName}},
+					</p>
+					<p style="font-size: 18px; color: #555555">
+						Your admin panel account information has been updated. Here are the details:
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 20px 0">
+					<div style="
+                background-color: #f9f9f9;
+                padding: 20px;
+                border-radius: 8px;
+                border-left: 4px solid #2e2e4c;
+              ">
+						<h2 style="font-size: 20px; color: #2e2e4c; margin-top: 0; margin-bottom: 15px">
+							Updated Information:
+						</h2>
+						<ul style="font-size: 16px; color: #555555; line-height: 1.8; padding-left: 20px">
+							{{#if userName}}
+							<li><strong>Full Name:</strong> {{userName}}</li>
+							{{/if}}
+							{{#if userPhone}}
+							<li><strong>Phone:</strong> {{userPhone}}</li>
+							{{/if}}
+							{{#if userNid}}
+							<li><strong>NID:</strong> {{userNid}}</li>
+							{{/if}}
+						</ul>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 20px 0">
+					<p style="font-size: 18px; color: #555555">
+						If you did not initiate this update or have any questions regarding your account, please contact our support team immediately.
+					</p>
+					<p style="font-size: 18px; color: #555555">
+						Thank you for using our admin panel.
+					</p>
+					<p style="font-size: 18px; color: #555555">Best regards,</p>
+					<p style="font-size: 18px; color: #555555">Example Team</p>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+
+</html>
+

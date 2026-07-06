@@ -1,0 +1,16 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="400" height="300" fill="#F2F2F2"/>
+<rect x="50" y="50" width="300" height="200" rx="8" fill="white" stroke="#E6E6E6" stroke-width="2"/>
+<!-- Mountain illustration -->
+<path d="M100 200L150 120L200 200H100Z" fill="#D1D5DB"/>
+<path d="M150 200L200 100L250 200H150Z" fill="#9CA3AF"/>
+<path d="M200 200L250 140L300 200H200Z" fill="#D1D5DB"/>
+<!-- Sun/Moon circle -->
+<circle cx="300" cy="80" r="25" fill="#FCD34D" opacity="0.8"/>
+<!-- Photo frame corners -->
+<circle cx="60" cy="60" r="4" fill="#E6E6E6"/>
+<circle cx="340" cy="60" r="4" fill="#E6E6E6"/>
+<circle cx="60" cy="240" r="4" fill="#E6E6E6"/>
+<circle cx="340" cy="240" r="4" fill="#E6E6E6"/>
+</svg>
+

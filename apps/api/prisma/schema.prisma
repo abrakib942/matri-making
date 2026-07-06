@@ -1,0 +1,1258 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  subject     String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@unique([subject, action])
+}
+
+model RolePermission {
+  id           Int      @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRole {
+  userId     Int
+  roleId     Int
+  assignedAt DateTime @default(now())
+  assignedBy Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model UserPermission {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  permissionId Int
+  grantedAt    DateTime @default(now())
+  grantedBy    Int?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BLOCKED
+}
+
+model User {
+  id                Int        @id @default(autoincrement())
+  name              String
+  email             String     @unique
+  password          String
+  otp               String?
+  otpAttemptCount   Int?       @default(0)
+  otpExpiresAt      DateTime?
+  otpPurpose        String?
+  phone             String?    @db.VarChar(17)
+  nid               String?    @db.VarChar(17)
+  dateOfBirth       String?
+  gender            Gender?    @default(OTHER)
+  address           String?    @db.Text
+  preferredLanguage String     @default("en")
+  emailVerifiedAt   DateTime?
+  phoneVerifiedAt   DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  status            UserStatus @default(PENDING)
+
+  roles       UserRole[]
+  permissions UserPermission[]
+
+  refreshTokens        RefreshToken[]
+  profileMembers       ProfileMember[]
+  createdProfiles      Profile[]             @relation("ProfileCreator")
+  wallet               CreditWallet?
+  orders               Order[]
+  subscriptions        Subscription[]
+  unlocks              BiodataUnlock[]
+  verificationRequests VerificationRequest[]
+  notifications        Notification[]
+  reportsFiled         Report[]              @relation("Reporter")
+  supportTickets       SupportTicket[]
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum GeneralStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Folder {
+  id        Int           @id @default(autoincrement())
+  slug      String        @unique @db.Text
+  name      String        @unique @db.Text
+  status    GeneralStatus @default(INACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  files File[]
+}
+
+enum FileType {
+  UNSPECIFIED
+  IMAGE
+  GIF
+  VIDEO
+  DOCUMENT
+}
+
+model File {
+  id        Int           @id @default(autoincrement())
+  folderId  Int
+  name      String
+  type      FileType      @default(UNSPECIFIED)
+  url       String        @db.Text
+  status    GeneralStatus @default(INACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  folder Folder @relation(fields: [folderId], references: [id])
+
+  @@unique([name, folderId])
+}
+
+// ============================================================
+// Matrimony domain — reference data
+// ============================================================
+
+enum LocationType {
+  COUNTRY
+  DIVISION
+  DISTRICT
+  UPAZILA
+}
+
+model Location {
+  id       Int          @id @default(autoincrement())
+  type     LocationType
+  nameEn   String
+  nameBn   String
+  parentId Int?
+
+  parent   Location?  @relation("LocationTree", fields: [parentId], references: [id])
+  children Location[] @relation("LocationTree")
+
+  @@unique([type, nameEn, parentId])
+  @@index([parentId])
+  @@index([type])
+}
+
+// ============================================================
+// Matrimony domain — profile core
+// ============================================================
+
+enum ProfileMode {
+  ISLAMIC
+  GENERAL
+}
+
+enum ProfileStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  HIDDEN
+  REJECTED
+  BLOCKED
+}
+
+enum MaritalStatus {
+  NEVER_MARRIED
+  MARRIED
+  DIVORCED
+  WIDOWED
+  WIDOWER
+}
+
+enum Complexion {
+  VERY_FAIR
+  FAIR
+  MEDIUM
+  OLIVE
+  DARK
+}
+
+enum BloodGroup {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+  UNKNOWN
+}
+
+enum EducationLevel {
+  BELOW_SSC
+  SSC
+  HSC
+  DIPLOMA
+  BACHELORS
+  MASTERS
+  DOCTORATE
+  MADRASA_QAWMI
+  MADRASA_ALIA
+  HAFEZ
+  ALIM
+  OTHER
+}
+
+enum FamilyStatus {
+  LOWER_CLASS
+  LOWER_MIDDLE_CLASS
+  MIDDLE_CLASS
+  UPPER_MIDDLE_CLASS
+  UPPER_CLASS
+}
+
+enum FamilyValues {
+  TRADITIONAL
+  MODERATE
+  LIBERAL
+  RELIGIOUS
+}
+
+enum Religion {
+  ISLAM
+  HINDUISM
+  CHRISTIANITY
+  BUDDHISM
+  OTHER
+}
+
+model Profile {
+  id                 Int             @id @default(autoincrement())
+  biodataNo          String          @unique
+  mode               ProfileMode
+  status             ProfileStatus   @default(DRAFT)
+  createdByUserId    Int
+  fullName           String
+  gender             Gender
+  dateOfBirth        DateTime
+  heightCm           Int?
+  weightKg           Int?
+  complexion         Complexion?
+  bloodGroup         BloodGroup?     @default(UNKNOWN)
+  maritalStatus      MaritalStatus   @default(NEVER_MARRIED)
+  childrenCount      Int?            @default(0)
+  religion           Religion        @default(ISLAM)
+  // Location
+  countryId          Int?
+  divisionId         Int?
+  districtId         Int?
+  upazilaId          Int?
+  presentAddress     String?         @db.Text
+  permanentAddress   String?         @db.Text
+  isExpat            Boolean         @default(false)
+  // Education & career
+  educationLevel     EducationLevel?
+  educationDetails   String?         @db.Text
+  professionKey      String?
+  professionDetails  String?         @db.Text
+  monthlyIncomeBdt   Int?
+  // Languages
+  languages          String[]        @default([])
+  // Family
+  fatherAlive        Boolean?
+  fatherOccupation   String?
+  motherAlive        Boolean?
+  motherOccupation   String?
+  brothersCount      Int?
+  sistersCount       Int?
+  familyStatus       FamilyStatus?
+  familyValues       FamilyValues?
+  familyDetails      String?         @db.Text
+  // Health
+  hasHealthIssues    Boolean?
+  healthDetails      String?         @db.Text
+  // Free text
+  aboutMe            String?         @db.Text
+  partnerExpectation String?         @db.Text
+  futureGoals        String?         @db.Text
+  // Contact (unlock-gated)
+  contactPhone       String?
+  contactEmail       String?
+  // Denormalized computed data
+  completionPercent  Int             @default(0)
+  readinessPercent   Int             @default(0)
+  greenFlags         Json            @default("[]")
+  verificationBadges Json            @default("[]")
+  isPremium          Boolean         @default(false)
+  boostedUntil       DateTime?
+  lastActiveAt       DateTime        @default(now())
+  approvedAt         DateTime?
+  rejectionReason    String?         @db.Text
+  viewCount          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  createdBy       User                   @relation("ProfileCreator", fields: [createdByUserId], references: [id])
+  islamicDetails  IslamicProfileDetails?
+  generalDetails  GeneralProfileDetails?
+  preference      PartnerPreference?
+  privacySettings PrivacySettings?
+  members         ProfileMember[]
+  media           ProfileMedia[]
+
+  sentInterests     Interest[]       @relation("InterestFrom")
+  receivedInterests Interest[]       @relation("InterestTo")
+  shortlistedBy     Shortlist[]      @relation("ShortlistTarget")
+  shortlists        Shortlist[]      @relation("ShortlistOwner")
+  favouritedBy      Favourite[]      @relation("FavouriteTarget")
+  favourites        Favourite[]      @relation("FavouriteOwner")
+  blocksMade        Block[]          @relation("BlockOwner")
+  blockedBy         Block[]          @relation("BlockTarget")
+  notesWritten      ProfileNote[]    @relation("NoteOwner")
+  notesAbout        ProfileNote[]    @relation("NoteTarget")
+  visitsMade        ProfileVisit[]   @relation("VisitVisitor")
+  visitsReceived    ProfileVisit[]   @relation("VisitTarget")
+  scoresAsA         MatchScore[]     @relation("ScoreProfileA")
+  scoresAsB         MatchScore[]     @relation("ScoreProfileB")
+  insights          ProfileInsight[]
+  unlocks           BiodataUnlock[]
+  reportsAgainst    Report[]         @relation("ReportedProfile")
+  successStories    SuccessStory[]
+
+  @@index([mode, status, gender])
+  @@index([districtId])
+  @@index([divisionId])
+  @@index([dateOfBirth])
+  @@index([maritalStatus])
+  @@index([educationLevel])
+  @@index([professionKey])
+  @@index([lastActiveAt])
+  @@index([createdByUserId])
+}
+
+// ============================================================
+// Islamic profile details
+// ============================================================
+
+enum Aqidah {
+  AHLE_SUNNAH_WAL_JAMAAH
+  SALAFI
+  DEOBANDI
+  BARELVI
+  OTHER
+}
+
+enum Madhhab {
+  HANAFI
+  SHAFII
+  MALIKI
+  HANBALI
+  AHLE_HADITH
+  NONE
+}
+
+enum PrayerFrequency {
+  FIVE_TIMES_DAILY
+  MOSTLY
+  SOMETIMES
+  RARELY
+  NEVER
+}
+
+enum BeardStyle {
+  FULL_SUNNAH
+  TRIMMED
+  NONE
+}
+
+enum HijabStyle {
+  NIQAB_WITH_ABAYA
+  HIJAB_WITH_ABAYA
+  HIJAB_ONLY
+  MODEST_DRESS
+  NONE
+}
+
+enum QuranMemorization {
+  FULL_HAFEZ
+  MULTIPLE_JUZ
+  FEW_SURAHS
+  LEARNING
+  NONE
+}
+
+enum QuranRecitation {
+  FLUENT_WITH_TAJWEED
+  FLUENT
+  LEARNING
+  CANNOT_READ
+}
+
+enum PolygynyPreference {
+  ACCEPTABLE
+  NOT_ACCEPTABLE
+  CONDITIONAL
+  NOT_APPLICABLE
+}
+
+enum GuardianRelation {
+  FATHER
+  MOTHER
+  BROTHER
+  SISTER
+  UNCLE
+  GRANDFATHER
+  OTHER
+}
+
+model IslamicProfileDetails {
+  id                   Int                 @id @default(autoincrement())
+  profileId            Int                 @unique
+  aqidah               Aqidah?
+  madhhab              Madhhab?
+  prayerFrequency      PrayerFrequency?
+  praysInCongregation  Boolean?
+  practicingSince      String?
+  beardStyle           BeardStyle?
+  wearsAboveAnkles     Boolean?
+  hijabStyle           HijabStyle?
+  mahramCompliance     Boolean?
+  quranMemorization    QuranMemorization?
+  quranRecitation      QuranRecitation?
+  islamicEducation     String?             @db.Text
+  madrasaBackground    Boolean?
+  islamicActivities    String?             @db.Text
+  dawahInvolvement     String?             @db.Text
+  listensToMusic       Boolean?
+  watchesDramas        Boolean?
+  dressOutside         String?             @db.Text
+  deenPracticeDetails  String?             @db.Text
+  marriageExpectations String?             @db.Text
+  polygynyPreference   PolygynyPreference?
+  // Wali / guardian (unlock-gated)
+  waliName             String?
+  waliRelation         GuardianRelation?
+  waliPhone            String?
+  waliApproves         Boolean?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([prayerFrequency])
+  @@index([madhhab])
+  @@index([quranMemorization])
+}
+
+// ============================================================
+// General profile details
+// ============================================================
+
+enum SmokingHabit {
+  NEVER
+  OCCASIONALLY
+  REGULARLY
+  QUIT
+}
+
+enum DrinkingHabit {
+  NEVER
+  OCCASIONALLY
+  REGULARLY
+  QUIT
+}
+
+enum DietPreference {
+  HALAL_ONLY
+  VEGETARIAN
+  NON_VEGETARIAN
+  VEGAN
+  NO_PREFERENCE
+}
+
+model GeneralProfileDetails {
+  id                Int             @id @default(autoincrement())
+  profileId         Int             @unique
+  smoking           SmokingHabit?
+  drinking          DrinkingHabit?
+  diet              DietPreference?
+  interests         String[]        @default([])
+  hobbies           String[]        @default([])
+  personalityTraits String[]        @default([])
+  careerGoals       String?         @db.Text
+  socialPreferences String?         @db.Text
+  travelPreference  String?
+  galleryEnabled    Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// Partner preference
+// ============================================================
+
+model PartnerPreference {
+  id                 Int                @id @default(autoincrement())
+  profileId          Int                @unique
+  ageMin             Int?
+  ageMax             Int?
+  heightCmMin        Int?
+  heightCmMax        Int?
+  maritalStatuses    MaritalStatus[]    @default([])
+  educationLevels    EducationLevel[]   @default([])
+  professionKeys     String[]           @default([])
+  districtIds        Int[]              @default([])
+  divisionIds        Int[]              @default([])
+  familyStatuses     FamilyStatus[]     @default([])
+  minPrayerFrequency PrayerFrequency?
+  hijabExpectation   HijabStyle?
+  beardExpectation   BeardStyle?
+  quranExpectation   QuranMemorization?
+  acceptsChildren    Boolean?
+  acceptsExpat       Boolean?
+  languages          String[]           @default([])
+  otherExpectations  String?            @db.Text
+  dealBreakers       String[]           @default([])
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// Privacy
+// ============================================================
+
+enum ProfileVisibility {
+  PUBLIC
+  VERIFIED_ONLY
+  HIDDEN
+}
+
+enum PhotoPolicy {
+  VISIBLE
+  BLURRED
+  ON_ACCEPT
+  ON_UNLOCK
+}
+
+enum ContactPolicy {
+  ON_UNLOCK
+  ON_ACCEPT
+  VERIFIED_ONLY
+}
+
+model PrivacySettings {
+  id            Int               @id @default(autoincrement())
+  profileId     Int               @unique
+  visibility    ProfileVisibility @default(PUBLIC)
+  photoPolicy   PhotoPolicy       @default(ON_UNLOCK)
+  contactPolicy ContactPolicy     @default(ON_UNLOCK)
+  hidePhone     Boolean           @default(true)
+  hideLocation  Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// Family accounts
+// ============================================================
+
+enum MemberRelationship {
+  SELF
+  FATHER
+  MOTHER
+  BROTHER
+  SISTER
+  GUARDIAN
+}
+
+enum MemberRole {
+  OWNER
+  MANAGER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model ProfileMember {
+  id           Int                @id @default(autoincrement())
+  userId       Int
+  profileId    Int
+  relationship MemberRelationship
+  role         MemberRole         @default(MANAGER)
+  inviteStatus InviteStatus       @default(ACCEPTED)
+  invitedBy    Int?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, profileId])
+  @@index([profileId])
+}
+
+// ============================================================
+// Profile media
+// ============================================================
+
+enum MediaType {
+  PHOTO
+  DOCUMENT
+}
+
+model ProfileMedia {
+  id         Int       @id @default(autoincrement())
+  profileId  Int
+  type       MediaType @default(PHOTO)
+  url        String    @db.Text
+  blurredUrl String?   @db.Text
+  isPrimary  Boolean   @default(false)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+// ============================================================
+// Discovery: interests, shortlist, favourite, block, notes, visits
+// ============================================================
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model Interest {
+  id            Int            @id @default(autoincrement())
+  fromProfileId Int
+  toProfileId   Int
+  status        InterestStatus @default(PENDING)
+  message       String?        @db.Text
+  respondedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  fromProfile Profile       @relation("InterestFrom", fields: [fromProfileId], references: [id], onDelete: Cascade)
+  toProfile   Profile       @relation("InterestTo", fields: [toProfileId], references: [id], onDelete: Cascade)
+  journey     MatchJourney?
+
+  @@unique([fromProfileId, toProfileId])
+  @@index([toProfileId, status])
+  @@index([fromProfileId, status])
+}
+
+model Shortlist {
+  id              Int      @id @default(autoincrement())
+  ownerProfileId  Int
+  targetProfileId Int
+  createdAt       DateTime @default(now())
+
+  ownerProfile  Profile @relation("ShortlistOwner", fields: [ownerProfileId], references: [id], onDelete: Cascade)
+  targetProfile Profile @relation("ShortlistTarget", fields: [targetProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerProfileId, targetProfileId])
+}
+
+model Favourite {
+  id              Int      @id @default(autoincrement())
+  ownerProfileId  Int
+  targetProfileId Int
+  createdAt       DateTime @default(now())
+
+  ownerProfile  Profile @relation("FavouriteOwner", fields: [ownerProfileId], references: [id], onDelete: Cascade)
+  targetProfile Profile @relation("FavouriteTarget", fields: [targetProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerProfileId, targetProfileId])
+}
+
+model Block {
+  id              Int      @id @default(autoincrement())
+  ownerProfileId  Int
+  targetProfileId Int
+  reason          String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  ownerProfile  Profile @relation("BlockOwner", fields: [ownerProfileId], references: [id], onDelete: Cascade)
+  targetProfile Profile @relation("BlockTarget", fields: [targetProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerProfileId, targetProfileId])
+  @@index([targetProfileId])
+}
+
+model ProfileNote {
+  id              Int      @id @default(autoincrement())
+  ownerProfileId  Int
+  targetProfileId Int
+  note            String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ownerProfile  Profile @relation("NoteOwner", fields: [ownerProfileId], references: [id], onDelete: Cascade)
+  targetProfile Profile @relation("NoteTarget", fields: [targetProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerProfileId, targetProfileId])
+}
+
+model ProfileVisit {
+  id               Int      @id @default(autoincrement())
+  visitorProfileId Int
+  targetProfileId  Int
+  visitedAt        DateTime @default(now())
+
+  visitorProfile Profile @relation("VisitVisitor", fields: [visitorProfileId], references: [id], onDelete: Cascade)
+  targetProfile  Profile @relation("VisitTarget", fields: [targetProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorProfileId, targetProfileId])
+  @@index([targetProfileId, visitedAt])
+}
+
+// ============================================================
+// Intelligence: match scores, insights (red flags)
+// ============================================================
+
+model MatchScore {
+  id         Int      @id @default(autoincrement())
+  profileAId Int
+  profileBId Int
+  score      Int
+  breakdown  Json
+  computedAt DateTime @default(now())
+
+  profileA Profile @relation("ScoreProfileA", fields: [profileAId], references: [id], onDelete: Cascade)
+  profileB Profile @relation("ScoreProfileB", fields: [profileBId], references: [id], onDelete: Cascade)
+
+  @@unique([profileAId, profileBId])
+  @@index([profileAId, score])
+}
+
+enum InsightSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model ProfileInsight {
+  id         Int             @id @default(autoincrement())
+  profileId  Int
+  key        String
+  severity   InsightSeverity @default(INFO)
+  data       Json            @default("{}")
+  computedAt DateTime        @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, key])
+  @@index([profileId])
+}
+
+// ============================================================
+// Notifications
+// ============================================================
+
+enum NotificationType {
+  INTEREST_RECEIVED
+  INTEREST_ACCEPTED
+  INTEREST_REJECTED
+  BIODATA_UNLOCKED
+  VERIFICATION_RESULT
+  PROFILE_APPROVED
+  PROFILE_REJECTED
+  PAYMENT_SUCCESS
+  SUBSCRIPTION_ACTIVATED
+  MEMBER_INVITE
+  JOURNEY_UPDATED
+  SYSTEM
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  type      NotificationType
+  titleEn   String
+  titleBn   String?
+  bodyEn    String?          @db.Text
+  bodyBn    String?          @db.Text
+  data      Json             @default("{}")
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// Monetization
+// ============================================================
+
+enum PlanInterval {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+model Plan {
+  id            Int          @id @default(autoincrement())
+  key           String       @unique
+  nameEn        String
+  nameBn        String?
+  descriptionEn String?      @db.Text
+  descriptionBn String?      @db.Text
+  pricePaisa    Int
+  interval      PlanInterval @default(MONTHLY)
+  features      Json         @default("{}")
+  isActive      Boolean      @default(true)
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  subscriptions Subscription[]
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Subscription {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  planId    Int
+  status    SubscriptionStatus @default(PENDING)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  orderId   Int?               @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan  Plan   @relation(fields: [planId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([userId, status])
+}
+
+model CreditPackage {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  nameEn     String
+  nameBn     String?
+  credits    Int
+  pricePaisa Int
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model CreditWallet {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries CreditLedger[]
+}
+
+enum LedgerEntryType {
+  PURCHASE
+  SPEND_UNLOCK
+  REFUND
+  ADMIN_ADJUSTMENT
+  BONUS
+}
+
+model CreditLedger {
+  id        Int             @id @default(autoincrement())
+  walletId  Int
+  type      LedgerEntryType
+  amount    Int
+  reference String?
+  note      String?
+  createdAt DateTime        @default(now())
+
+  wallet CreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+}
+
+enum OrderType {
+  CREDIT_PACKAGE
+  SUBSCRIPTION
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNo     String      @unique
+  userId      Int
+  type        OrderType
+  itemKey     String
+  amountPaisa Int
+  currency    String      @default("BDT")
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  payments     Payment[]
+  invoice      Invoice?
+  subscription Subscription?
+
+  @@index([userId, status])
+}
+
+enum PaymentProvider {
+  SSLCOMMERZ
+  BKASH
+  MANUAL
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+model Payment {
+  id             Int             @id @default(autoincrement())
+  orderId        Int
+  provider       PaymentProvider @default(SSLCOMMERZ)
+  status         PaymentStatus   @default(INITIATED)
+  amountPaisa    Int
+  gatewayTxnId   String?         @unique
+  sessionKey     String?
+  gatewayPayload Json?
+  validatedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+}
+
+model Invoice {
+  id          Int      @id @default(autoincrement())
+  invoiceNo   String   @unique
+  orderId     Int      @unique
+  amountPaisa Int
+  currency    String   @default("BDT")
+  issuedAt    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+// ============================================================
+// Biodata unlock
+// ============================================================
+
+enum UnlockType {
+  CONTACT
+  GUARDIAN
+  FULL_BIODATA
+}
+
+enum UnlockSource {
+  PURCHASE
+  INTEREST_ACCEPTED
+  ADMIN
+}
+
+model BiodataUnlock {
+  id           Int          @id @default(autoincrement())
+  viewerUserId Int
+  profileId    Int
+  type         UnlockType
+  source       UnlockSource
+  creditsSpent Int          @default(0)
+  expiresAt    DateTime?
+  createdAt    DateTime     @default(now())
+
+  viewer  User    @relation(fields: [viewerUserId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([viewerUserId, profileId, type])
+  @@index([profileId])
+}
+
+// ============================================================
+// Verification
+// ============================================================
+
+enum VerificationType {
+  EMAIL
+  PHONE
+  NID
+  FACE
+  SCHOLAR
+  GUARDIAN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model VerificationRequest {
+  id           Int                @id @default(autoincrement())
+  userId       Int
+  type         VerificationType
+  status       VerificationStatus @default(PENDING)
+  evidenceUrls String[]           @default([])
+  note         String?            @db.Text
+  reviewerId   Int?
+  reviewedAt   DateTime?
+  reviewNote   String?            @db.Text
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([status, type])
+}
+
+// ============================================================
+// Match journey
+// ============================================================
+
+enum JourneyStage {
+  ACCEPTED
+  FAMILY_DISCUSSION
+  MEETING
+  ENGAGEMENT
+  MARRIED
+  DISCONTINUED
+}
+
+model MatchJourney {
+  id                     Int          @id @default(autoincrement())
+  interestId             Int          @unique
+  stage                  JourneyStage @default(ACCEPTED)
+  marriedConfirmedByFrom Boolean      @default(false)
+  marriedConfirmedByTo   Boolean      @default(false)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  interest Interest            @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  events   MatchJourneyEvent[]
+}
+
+model MatchJourneyEvent {
+  id          Int          @id @default(autoincrement())
+  journeyId   Int
+  stage       JourneyStage
+  note        String?      @db.Text
+  byProfileId Int?
+  createdAt   DateTime     @default(now())
+
+  journey MatchJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@index([journeyId])
+}
+
+// ============================================================
+// Admin & operations
+// ============================================================
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id                Int          @id @default(autoincrement())
+  reporterUserId    Int
+  reportedProfileId Int
+  reason            String
+  details           String?      @db.Text
+  status            ReportStatus @default(OPEN)
+  resolvedBy        Int?
+  resolutionNote    String?      @db.Text
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  reporter        User    @relation("Reporter", fields: [reporterUserId], references: [id])
+  reportedProfile Profile @relation("ReportedProfile", fields: [reportedProfileId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([reportedProfileId])
+}
+
+model SuccessStory {
+  id        Int           @id @default(autoincrement())
+  profileId Int?
+  titleEn   String
+  titleBn   String?
+  contentEn String        @db.Text
+  contentBn String?       @db.Text
+  imageUrl  String?       @db.Text
+  marriedAt DateTime?
+  status    GeneralStatus @default(INACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  profile Profile? @relation(fields: [profileId], references: [id])
+}
+
+model CmsPage {
+  id        Int           @id @default(autoincrement())
+  slug      String        @unique
+  titleEn   String
+  titleBn   String?
+  contentEn String        @db.Text
+  contentBn String?       @db.Text
+  status    GeneralStatus @default(INACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Advertisement {
+  id        Int           @id @default(autoincrement())
+  title     String
+  imageUrl  String        @db.Text
+  targetUrl String?       @db.Text
+  placement String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  status    GeneralStatus @default(INACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  subject   String
+  status    TicketStatus   @default(OPEN)
+  priority  TicketPriority @default(MEDIUM)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportTicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SupportTicketMessage {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  senderId  Int
+  isStaff   Boolean  @default(false)
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+// Sequence source for public biodata numbers (LM-100001 ...)
+model BiodataSequence {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
