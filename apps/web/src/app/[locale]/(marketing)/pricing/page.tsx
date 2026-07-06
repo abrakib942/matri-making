@@ -4,11 +4,18 @@ import { Check } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/navigation';
 import { metaApi } from '@/lib/api/endpoints';
-import type { PlanItem } from '@/types/api';
+import type { CreditPackageItem, PlanItem } from '@/types/api';
 
 function formatPrice(paisa: number, locale: string) {
   const bdt = paisa / 100;
@@ -33,7 +40,9 @@ function PlanCard({ plan, locale }: { plan: PlanItem; locale: string }) {
         <p className="text-3xl font-bold pt-2">
           {formatPrice(plan.pricePaisa, locale)}
           {plan.interval && plan.interval !== 'ONE_TIME' && (
-            <span className="text-sm font-normal text-muted-foreground">/{plan.interval.toLowerCase()}</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              /{plan.interval.toLowerCase()}
+            </span>
           )}
         </p>
       </CardHeader>
@@ -60,7 +69,7 @@ export default function PricingPage() {
   const t = useTranslations('pricing');
   const locale = useLocale();
   const [plans, setPlans] = useState<PlanItem[]>([]);
-  const [packages, setPackages] = useState<PlanItem[]>([]);
+  const [packages, setPackages] = useState<CreditPackageItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,7 +77,7 @@ export default function PricingPage() {
       .getPlans()
       .then(data => {
         setPlans(data.plans ?? []);
-        setPackages(data.packages ?? []);
+        setPackages(data.creditPackages ?? []);
       })
       .catch(() => {
         setPlans([]);
@@ -125,7 +134,7 @@ export default function PricingPage() {
                 <CardContent>
                   <p className="text-2xl font-bold">{formatPrice(pkg.pricePaisa, locale)}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {locale === 'bn' ? pkg.descriptionBn || pkg.descriptionEn : pkg.descriptionEn}
+                    {pkg.credits} unlock{pkg.credits === 1 ? '' : 's'}
                   </p>
                 </CardContent>
               </Card>

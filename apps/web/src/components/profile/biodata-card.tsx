@@ -29,7 +29,15 @@ function CompatibilityRing({ percent }: { percent: number }) {
   return (
     <div className="relative h-16 w-16 shrink-0">
       <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64" aria-hidden>
-        <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-muted" />
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          className="text-muted"
+        />
         <circle
           cx="32"
           cy="32"
@@ -65,6 +73,8 @@ export function BiodataCard({
   const [favLoading, setFavLoading] = useState(false);
 
   const flags = (profile.greenFlags as string[] | undefined)?.slice(0, 2) ?? [];
+  const matchPercent =
+    profile.mandatoryMatchPercent ?? profile.compatibilityPercent ?? profile.overallMatchPercent;
   const essence = [
     label('profession', profile.professionKey ?? undefined),
     label('educationLevel', profile.educationLevel ?? undefined),
@@ -103,9 +113,9 @@ export function BiodataCard({
           </span>
         )}
       </div>
-      {showCompatibility && profile.compatibilityPercent != null && variant === 'horizontal' && (
+      {showCompatibility && matchPercent != null && variant === 'horizontal' && (
         <span className="absolute -bottom-1 -right-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-sm">
-          {profile.compatibilityPercent}%
+          {matchPercent}%
         </span>
       )}
     </div>
@@ -132,7 +142,10 @@ export function BiodataCard({
             aria-label={t('favourite')}
           >
             <Heart
-              className={cn('h-4 w-4', favourited ? 'fill-accent text-accent' : 'text-muted-foreground')}
+              className={cn(
+                'h-4 w-4',
+                favourited ? 'fill-accent text-accent' : 'text-muted-foreground',
+              )}
             />
           </button>
         )}
@@ -161,9 +174,9 @@ export function BiodataCard({
         </div>
       )}
 
-      {showCompatibility && profile.compatibilityPercent != null && variant === 'vertical' && (
+      {showCompatibility && matchPercent != null && variant === 'vertical' && (
         <div className="pt-2">
-          <CompatibilityRing percent={profile.compatibilityPercent} />
+          <CompatibilityRing percent={matchPercent} />
         </div>
       )}
 

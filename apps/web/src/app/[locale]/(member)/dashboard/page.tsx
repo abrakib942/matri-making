@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, Inbox, Search, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { Heart, Inbox, Search, Sparkles, TrendingUp, Users, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { BiodataCard } from '@/components/profile/biodata-card';
@@ -12,7 +12,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/navigation';
 import { dashboardApi } from '@/lib/api/endpoints';
-import type { BiodataCard as BiodataCardType } from '@/types/api';
+import type { BiodataCard as BiodataCardType, MutualMatchItem } from '@/types/api';
 
 interface DashboardResponse {
   hasProfile?: boolean;
@@ -32,11 +32,13 @@ interface DashboardResponse {
     shortlistCount: number;
   };
   recommendedMatches?: BiodataCardType[];
+  mutualMatches?: { count: number; items: MutualMatchItem[] };
   unreadNotifications?: number;
 }
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
+  const mutual = useTranslations('mutualMatch');
   const nav = useTranslations('nav');
   const c = useTranslations('common');
   const [data, setData] = useState<DashboardResponse | null>(null);
@@ -124,6 +126,27 @@ export default function DashboardPage() {
           value={stats?.unreadNotifications ?? data.unreadNotifications ?? 0}
         />
       </div>
+
+      {(data.mutualMatches?.count ?? 0) > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">{mutual('title')}</p>
+                <p className="text-sm text-muted-foreground">{mutual('subtitle')}</p>
+              </div>
+            </div>
+            <Button asChild>
+              <Link href={`/profiles/${data.mutualMatches?.items[0]?.profileId ?? ''}`}>
+                {mutual('cta')}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>

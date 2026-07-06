@@ -1,4 +1,5 @@
 import { EditorialHero } from '@/components/marketing/editorial-hero';
+import { HomeDiscoverSection } from '@/components/marketing/home-discover-section';
 import { PhilosophyStrip } from '@/components/marketing/philosophy-strip';
 import { JourneyNarrative } from '@/components/marketing/journey-narrative';
 import { CompatibilityBento } from '@/components/marketing/compatibility-bento';
@@ -21,6 +22,7 @@ export default function HomePage() {
   return (
     <>
       <EditorialHero />
+      <HomeDiscoverSection />
       <PhilosophyStrip />
       <JourneyNarrative />
       <CompatibilityBento />

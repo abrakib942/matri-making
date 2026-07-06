@@ -2,10 +2,13 @@ import { api, apiDelete, apiGet, apiPost, apiPut } from './client';
 import type {
   AuthTokens,
   AuthUser,
+  CreditPackageItem,
   EnumCatalog,
   LocationItem,
   PlanItem,
   PublicStats,
+  UnlockResult,
+  WalletData,
 } from '@/types/api';
 
 export const authApi = {
@@ -37,7 +40,8 @@ export const metaApi = {
   getEnums: (lang: string) => apiGet<EnumCatalog>(`/api/v1/meta/enums?lang=${lang}`),
   getLocations: (type?: string, parentId?: number) =>
     apiGet<LocationItem[]>('/api/v1/meta/locations', { type, parentId }),
-  getPlans: () => apiGet<{ plans: PlanItem[]; packages: PlanItem[] }>('/api/v1/meta/plans'),
+  getPlans: () =>
+    apiGet<{ plans: PlanItem[]; creditPackages: CreditPackageItem[] }>('/api/v1/meta/plans'),
   getStats: () => apiGet<PublicStats>('/api/v1/meta/stats'),
 };
 
@@ -84,21 +88,38 @@ export const interestApi = {
   listShortlist: () => apiGet('/api/v1/me/shortlist'),
   listFavourites: () => apiGet('/api/v1/me/favourites'),
   listVisitors: () => apiGet('/api/v1/me/visitors'),
+  listMutualMatches: () =>
+    apiGet<{ count: number; items: import('@/types/api').MutualMatchItem[] }>(
+      '/api/v1/me/mutual-matches',
+    ),
 };
 
 export const intelligenceApi = {
   recommendations: () => apiGet('/api/v1/recommendations'),
-  compatibility: (profileId: number) => apiGet(`/api/v1/profiles/${profileId}/compatibility`),
+  compatibility: (profileId: number) =>
+    apiGet<import('@/types/api').CompatibilityResult>(
+      `/api/v1/profiles/${profileId}/compatibility`,
+    ),
   readiness: (profileId: number) => apiGet(`/api/v1/profiles/${profileId}/readiness`),
   insights: () => apiGet('/api/v1/me/insights'),
 };
 
+export const chatApi = {
+  listRooms: () => apiGet<import('@/types/api').ChatRoomSummary[]>('/api/v1/me/chat-rooms'),
+  getMessages: (roomId: number, cursor?: number) =>
+    apiGet<{ messages: unknown[]; nextCursor: number | null; participantRole: string }>(
+      `/api/v1/chat-rooms/${roomId}/messages`,
+      cursor ? { cursor } : undefined,
+    ),
+};
+
 export const paymentApi = {
-  wallet: () => apiGet('/api/v1/me/wallet'),
+  wallet: () => apiGet<WalletData>('/api/v1/me/wallet'),
   entitlements: () => apiGet('/api/v1/me/entitlements'),
-  createOrder: (body: { type: string; itemKey: string }) => apiPost('/api/v1/orders', body),
+  createOrder: (body: { type: string; itemKey: string }) =>
+    apiPost<{ gatewayUrl?: string | null; orderNo?: string }>('/api/v1/orders', body),
   unlock: (profileId: number, type: string) =>
-    apiPost(`/api/v1/profiles/${profileId}/unlock`, { type }),
+    apiPost<UnlockResult>(`/api/v1/profiles/${profileId}/unlock`, { type }),
   listUnlocks: () => apiGet('/api/v1/me/unlocks'),
   listOrders: () => apiGet('/api/v1/orders'),
 };

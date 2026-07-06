@@ -33,15 +33,17 @@ export function CuratedMatches() {
         </div>
 
         <div className="space-y-4">
-          {loading
-            ? Array.from({ length: 3 }).map((_, i) => <BiodataCardSkeleton key={i} variant="horizontal" />)
-            : profiles.length > 0
-              ? profiles.map(p => <BiodataCard key={p.id} profile={p} variant="horizontal" />)
-              : (
-                <div className="glass-panel p-12 text-center text-muted-foreground">
-                  {t('curatedEmpty')}
-                </div>
-              )}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <BiodataCardSkeleton key={i} variant="horizontal" />
+            ))
+          ) : profiles.length > 0 ? (
+            profiles.map(p => <BiodataCard key={p.id} profile={p} variant="horizontal" />)
+          ) : (
+            <div className="glass-panel p-12 text-center text-muted-foreground">
+              {t('curatedEmpty')}
+            </div>
+          )}
         </div>
 
         <div className="mt-10 text-center">

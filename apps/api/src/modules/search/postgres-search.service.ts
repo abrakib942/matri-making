@@ -1,8 +1,4 @@
-import {
-  createErrorResult,
-  createSuccessResult,
-  ServiceResult,
-} from '@/common/interfaces/service-result.interface';
+import { createSuccessResult, ServiceResult } from '@/common/interfaces/service-result.interface';
 import { DbService } from '@/db/db.service';
 import { CompatibilityService } from '@/modules/intelligence/compatibility.service';
 import { FeatureGateService } from '@/modules/payment/feature-gate.service';

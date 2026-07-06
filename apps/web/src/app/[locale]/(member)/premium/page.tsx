@@ -4,7 +4,14 @@ import { Check } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { metaApi, paymentApi } from '@/lib/api/endpoints';
 import type { PlanItem } from '@/types/api';
@@ -64,7 +71,8 @@ export default function PremiumPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {plans.map(plan => {
             const name = locale === 'bn' ? plan.nameBn || plan.nameEn : plan.nameEn;
-            const desc = locale === 'bn' ? plan.descriptionBn || plan.descriptionEn : plan.descriptionEn;
+            const desc =
+              locale === 'bn' ? plan.descriptionBn || plan.descriptionEn : plan.descriptionEn;
             const features = Object.entries(plan.features ?? {}).filter(([, v]) => v);
 
             return (

@@ -150,6 +150,10 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SMS_PROVIDER_SENDER_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  STARTER_UNLOCK_CREDITS?: string = '0';
 }
 
 function validate(config: Record<string, unknown>) {
@@ -221,6 +225,11 @@ export const apiBaseUrl = env.API_BASE_URL;
 export const smsProvider = env.SMS_PROVIDER;
 export const smsProviderApiKey = env.SMS_PROVIDER_API_KEY;
 export const smsProviderSenderId = env.SMS_PROVIDER_SENDER_ID;
+
+export const starterUnlockCredits = Math.max(
+  0,
+  Number.parseInt(env.STARTER_UNLOCK_CREDITS ?? '0', 10) || 0,
+);
 
 // Export the validate function for use in ConfigModule
 export { validate };

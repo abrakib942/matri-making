@@ -26,7 +26,9 @@ export default function NotificationsPage() {
     notificationApi
       .list()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: Notification[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: Notification[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))

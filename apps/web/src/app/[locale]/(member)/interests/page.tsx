@@ -33,7 +33,9 @@ export default function InterestsPage() {
     interestApi
       .list(tab === 'sent' ? 'SENT' : 'RECEIVED')
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: InterestItem[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: InterestItem[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))
@@ -55,7 +57,7 @@ export default function InterestsPage() {
   };
 
   const profileOf = (item: InterestItem) =>
-    tab === 'sent' ? item.toProfile ?? item.profile : item.fromProfile ?? item.profile;
+    tab === 'sent' ? (item.toProfile ?? item.profile) : (item.fromProfile ?? item.profile);
 
   return (
     <div className="space-y-6">
@@ -68,7 +70,9 @@ export default function InterestsPage() {
             type="button"
             onClick={() => setTab(key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              tab === key
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground'
             }`}
           >
             {key === 'received' ? 'Received' : 'Sent'}
@@ -103,13 +107,24 @@ export default function InterestsPage() {
                       <p className="text-sm">
                         Status: <span className="font-medium">{item.status}</span>
                       </p>
-                      {item.message && <p className="text-sm text-muted-foreground">{item.message}</p>}
+                      {item.message && (
+                        <p className="text-sm text-muted-foreground">{item.message}</p>
+                      )}
                       {tab === 'received' && item.status === 'PENDING' && (
                         <div className="flex gap-2">
-                          <Button size="sm" disabled={acting === item.id} onClick={() => respond(item.id, 'ACCEPT')}>
+                          <Button
+                            size="sm"
+                            disabled={acting === item.id}
+                            onClick={() => respond(item.id, 'ACCEPT')}
+                          >
                             {acting === item.id ? c('loading') : 'Accept'}
                           </Button>
-                          <Button size="sm" variant="outline" disabled={acting === item.id} onClick={() => respond(item.id, 'REJECT')}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={acting === item.id}
+                            onClick={() => respond(item.id, 'REJECT')}
+                          >
                             Reject
                           </Button>
                         </div>

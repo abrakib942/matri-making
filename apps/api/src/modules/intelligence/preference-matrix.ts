@@ -1,10 +1,4 @@
-import {
-  EducationLevel,
-  PrayerFrequency,
-  Prisma,
-  ProfileMode,
-  SmokingHabit,
-} from '@prisma/client';
+import { EducationLevel, PrayerFrequency, ProfileMode, SmokingHabit } from '@prisma/client';
 import type { DimensionScore, ScorableProfile } from './scorers';
 
 const PRAYER_RANK: Record<PrayerFrequency, number> = {
@@ -74,10 +68,7 @@ function scoreLocationFit(viewer: ScorableProfile, target: ScorableProfile): num
   return 40;
 }
 
-function scoreLifestyle(
-  viewer: ScorableProfile,
-  target: ScorableProfile,
-): DimensionScore | null {
+function scoreLifestyle(viewer: ScorableProfile, target: ScorableProfile): DimensionScore | null {
   const g = target.generalDetails;
   if (!g) return null;
 

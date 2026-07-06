@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ProfileWizard } from '@/components/onboarding/profile-wizard';
+import { ProfileSectionEditor } from '@/components/profile/profile-section-editor';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useRouter } from '@/i18n/navigation';
 import type { ProfileModeType } from '@/types/api';
@@ -23,7 +23,9 @@ export default function OnboardingPage() {
 
     const fromQuery = searchParams.get('mode') as ProfileModeType | null;
     const fromStorage =
-      typeof window !== 'undefined' ? (sessionStorage.getItem(MODE_KEY) as ProfileModeType | null) : null;
+      typeof window !== 'undefined'
+        ? (sessionStorage.getItem(MODE_KEY) as ProfileModeType | null)
+        : null;
     const resolved = fromQuery === 'ISLAMIC' || fromQuery === 'GENERAL' ? fromQuery : fromStorage;
 
     if (resolved) {
@@ -44,7 +46,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="container py-8 md:py-12 max-w-3xl">
-      <ProfileWizard mode={mode} onComplete={() => router.push('/dashboard')} />
+      <ProfileSectionEditor mode={mode} onComplete={() => router.push('/my-profile')} />
     </div>
   );
 }

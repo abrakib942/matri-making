@@ -26,9 +26,7 @@ export function EditorialHero() {
             className="lg:col-span-7 space-y-8"
           >
             <p className="text-label">{t('heroEyebrow')}</p>
-            <h1 className="text-display font-bengali text-balance">
-              {t('heroTitleNew')}
-            </h1>
+            <h1 className="text-display font-bengali text-balance">{t('heroTitleNew')}</h1>
             <p className="text-body max-w-xl text-lg">{t('heroSubtitleNew')}</p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button asChild size="lg" className="rounded-full px-8 h-12 text-base gap-2">

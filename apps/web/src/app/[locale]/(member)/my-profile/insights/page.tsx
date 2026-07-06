@@ -91,7 +91,9 @@ export default function ProfileInsightsPage() {
           )}
 
           {!(data.redFlags?.length || data.greenFlags?.length || data.suggestions?.length) && (
-            <p className="text-muted-foreground">Your profile looks good. Keep it updated for better matches.</p>
+            <p className="text-muted-foreground">
+              Your profile looks good. Keep it updated for better matches.
+            </p>
           )}
         </>
       )}

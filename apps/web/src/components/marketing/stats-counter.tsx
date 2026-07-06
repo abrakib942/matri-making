@@ -45,6 +45,10 @@ export function StatsCounter() {
           grooms: 520,
           brides: 480,
           successfulMarriages: 50,
+          byMode: {
+            ISLAMIC: { male: 300, female: 280, total: 580 },
+            GENERAL: { male: 220, female: 200, total: 420 },
+          },
           divisions: [],
         }),
       )

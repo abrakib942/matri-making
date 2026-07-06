@@ -2,7 +2,7 @@ import { DbService } from '@/db/db.service';
 import { InAppNotificationService } from '@/modules/notification/notification.service';
 import { ProfileAccessService } from '@/modules/profile/profile-access.service';
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { ChatParticipantRole, ChatRoomStatus, ProfileMode } from '@prisma/client';
+import { ChatParticipantRole, ProfileMode } from '@prisma/client';
 
 const CHAT_DAYS_ISLAMIC = 14;
 
@@ -63,7 +63,7 @@ export class ChatService implements OnModuleInit, OnModuleDestroy {
     unlockId: number;
     targetMode: ProfileMode;
   }) {
-    const { viewerUserId, viewerProfileId, targetProfileId, unlockId, targetMode } = params;
+    const { viewerProfileId, targetProfileId, unlockId, targetMode } = params;
     const [low, high] = this.pairKey(viewerProfileId, targetProfileId);
 
     const existing = await this.findActiveRoomBetween(viewerProfileId, targetProfileId);

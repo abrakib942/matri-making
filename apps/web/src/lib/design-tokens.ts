@@ -2,7 +2,8 @@ export const shadows = {
   sm: 'shadow-sm',
   md: 'shadow-md',
   lg: 'shadow-lg',
-  intro: 'shadow-[0_8px_32px_rgba(60,40,100,0.06)] hover:shadow-[0_16px_48px_rgba(60,40,100,0.1)] transition-all duration-300',
+  intro:
+    'shadow-[0_8px_32px_rgba(60,40,100,0.06)] hover:shadow-[0_16px_48px_rgba(60,40,100,0.1)] transition-all duration-300',
 } as const;
 
 export const radius = {

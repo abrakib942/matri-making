@@ -3,6 +3,7 @@ import {
   createSuccessResult,
   ServiceResult,
 } from '@/common/interfaces/service-result.interface';
+import { starterUnlockCredits } from '@/config/env';
 import { DbService } from '@/db/db.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { MemberRole, Prisma } from '@prisma/client';
@@ -144,6 +145,25 @@ export class ProfileService {
 
       return created;
     });
+
+    if (starterUnlockCredits > 0) {
+      const existingWallet = await this.db.creditWallet.findUnique({ where: { userId } });
+      if (!existingWallet) {
+        await this.db.creditWallet.create({
+          data: {
+            userId,
+            balance: starterUnlockCredits,
+            entries: {
+              create: {
+                type: 'BONUS',
+                amount: starterUnlockCredits,
+                note: 'Welcome unlock credits',
+              },
+            },
+          },
+        });
+      }
+    }
 
     await this.recomputeDerived(profile.id);
 

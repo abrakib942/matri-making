@@ -29,8 +29,8 @@ export default function FamilyPage() {
       .then((data: unknown) => {
         const profile = Array.isArray(data)
           ? (data as { members?: Member[] }[])[0]
-          : (data as { profiles?: { members?: Member[] }[] })?.profiles?.[0] ??
-            (data as { members?: Member[] });
+          : ((data as { profiles?: { members?: Member[] }[] })?.profiles?.[0] ??
+            (data as { members?: Member[] }));
         const list = (profile as { members?: Member[] })?.members ?? [];
         setMembers(list);
       })
@@ -51,13 +51,17 @@ export default function FamilyPage() {
           {members.map(m => (
             <Card key={m.id}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{m.user?.name ?? m.user?.email ?? `User #${m.userId}`}</CardTitle>
+                <CardTitle className="text-base">
+                  {m.user?.name ?? m.user?.email ?? `User #${m.userId}`}
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                 <span>{label('memberRelationship', m.relationship)}</span>
                 <span>·</span>
                 <span>{m.role}</span>
-                <Badge variant={m.inviteStatus === 'ACCEPTED' ? 'success' : 'secondary'}>{m.inviteStatus}</Badge>
+                <Badge variant={m.inviteStatus === 'ACCEPTED' ? 'success' : 'secondary'}>
+                  {m.inviteStatus}
+                </Badge>
               </CardContent>
             </Card>
           ))}

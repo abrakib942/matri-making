@@ -1,16 +1,11 @@
 'use client';
 
-import {
-  Bell,
-  Compass,
-  Heart,
-  Home,
-  User,
-} from 'lucide-react';
+import { Compass, Bell, Home, MessageCircle, Star, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/layout/site-header';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
 import { dashboardApi } from '@/lib/api/endpoints';
@@ -19,31 +14,47 @@ import { cn } from '@/lib/utils';
 const primaryNav = [
   { href: '/dashboard', icon: Home, labelKey: 'home' as const },
   { href: '/search', icon: Compass, labelKey: 'discover' as const },
-  { href: '/recommendations', icon: Heart, labelKey: 'matches' as const },
+  { href: '/shortlist', icon: Star, labelKey: 'shortlist' as const },
+  { href: '/messages', icon: MessageCircle, labelKey: 'messages' as const },
   { href: '/my-profile', icon: User, labelKey: 'profile' as const },
 ];
+
+const guestPaths = ['/search', '/profiles'];
+
+function isGuestAllowedPath(pathname: string) {
+  return guestPaths.some(p => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('common');
   const member = useTranslations('member');
+  const search = useTranslations('search');
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [unread, setUnread] = useState(0);
+  const [mutualCount, setMutualCount] = useState(0);
+
+  const guestAllowed = isGuestAllowedPath(pathname);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !guestAllowed) {
       router.replace(`/login?returnUrl=${encodeURIComponent(pathname)}`);
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
+  }, [isLoading, isAuthenticated, router, pathname, guestAllowed]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     dashboardApi
       .get()
       .then((data: unknown) => {
-        const d = data as { stats?: { unreadNotifications?: number }; unreadNotifications?: number };
+        const d = data as {
+          stats?: { unreadNotifications?: number };
+          unreadNotifications?: number;
+          mutualMatches?: { count?: number };
+        };
         setUnread(d.stats?.unreadNotifications ?? d.unreadNotifications ?? 0);
+        setMutualCount(d.mutualMatches?.count ?? 0);
       })
       .catch(() => {});
   }, [isAuthenticated]);
@@ -56,7 +67,31 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated && !guestAllowed) return null;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen mesh-hero flex flex-col">
+        <SiteHeader />
+        <div className="border-b border-border/50 bg-primary/5">
+          <div className="container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3">
+            <p className="text-sm text-muted-foreground">{search('guestBanner')}</p>
+            <div className="flex gap-2 shrink-0">
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <Link href={`/login?returnUrl=${encodeURIComponent(pathname)}`}>{t('login')}</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-full">
+                <Link href={`/register?returnUrl=${encodeURIComponent(pathname)}`}>
+                  {search('guestCreateCta')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+        <main className="flex-1 container py-6 md:py-10">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen mesh-hero flex flex-col">
@@ -68,12 +103,18 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
             {primaryNav.map(item => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
+              const badge =
+                item.href === '/notifications'
+                  ? unread
+                  : item.href === '/shortlist'
+                    ? mutualCount
+                    : 0;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors',
+                    'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors relative',
                     active
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
@@ -81,6 +122,11 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
                 >
                   <Icon className="h-4 w-4" />
                   <span className="hidden sm:inline">{member(item.labelKey)}</span>
+                  {badge > 0 && item.href === '/shortlist' && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-accent text-[10px] font-bold text-accent-foreground flex items-center justify-center px-1">
+                      {badge > 9 ? '9+' : badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

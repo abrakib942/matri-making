@@ -32,7 +32,7 @@ export default function HelpPage() {
 
   return (
     <div className="container py-12 md:py-16 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-8">{loading ? t('help') : title ?? t('help')}</h1>
+      <h1 className="text-4xl font-bold mb-8">{loading ? t('help') : (title ?? t('help'))}</h1>
       {loading ? (
         <div className="space-y-4">
           <Skeleton className="h-4 w-full" />

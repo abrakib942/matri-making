@@ -67,15 +67,32 @@ export class UnlockService {
     }
 
     const viewerProfileId = await this.access.getPrimaryProfileId(userId);
+
+    if (type === 'CONTACT' && profile.mode === 'ISLAMIC' && !viewerProfileId) {
+      return createErrorResult(
+        {
+          name: 'badRequest',
+          message: 'Create your biodata before unlocking safe chat',
+        },
+        'Create your biodata before unlocking',
+      );
+    }
+
     let baseCost = UNLOCK_COST[type];
     let discountApplied = false;
     let mutualMatchId: number | undefined;
+    let discountIsLow = false;
 
     if (viewerProfileId) {
-      const discount = await this.mutualMatch.applyDiscountIfEligible(viewerProfileId, profileId);
-      if (discount.applied) {
+      const discount = await this.mutualMatch.checkDiscountEligibility(viewerProfileId, profileId);
+      if (
+        discount.eligible &&
+        discount.mutualMatchId !== undefined &&
+        discount.isLow !== undefined
+      ) {
         discountApplied = true;
         mutualMatchId = discount.mutualMatchId;
+        discountIsLow = discount.isLow;
         baseCost = Math.max(1, Math.ceil(baseCost * 0.5));
       }
     }
@@ -123,6 +140,10 @@ export class UnlockService {
               creditsSpent: cost,
             },
           });
+
+      if (discountApplied && mutualMatchId !== undefined) {
+        await this.mutualMatch.commitDiscount(mutualMatchId, discountIsLow, tx);
+      }
 
       return { insufficient: false as const, unlock };
     });

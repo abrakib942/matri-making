@@ -2,41 +2,35 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { ProfileWizard } from '@/components/onboarding/profile-wizard';
+import { ProfileDetailSheet } from '@/components/profile/profile-detail-sheet';
+import { ProfileSectionEditor } from '@/components/profile/profile-section-editor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Link } from '@/i18n/navigation';
 import { profileApi } from '@/lib/api/endpoints';
-import type { ProfileModeType } from '@/types/api';
-
-interface MyProfile {
-  id: number;
-  biodataNo: string;
-  mode: ProfileModeType;
-  status: string;
-  completionPercent: number;
-}
+import { unwrapMineProfile } from '@/lib/profile/unwrap-mine';
+import type { ProfileDetail } from '@/types/profile';
 
 export default function MyProfilePage() {
   const nav = useTranslations('nav');
-  const t = useTranslations('member');
+  const t = useTranslations('profile');
   const c = useTranslations('common');
-  const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [profile, setProfile] = useState<ProfileDetail | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     profileApi
       .getMine()
-      .then((data: unknown) => {
-        const profiles = Array.isArray(data)
-          ? data
-          : (data as { profiles?: MyProfile[] })?.profiles ?? [data];
-        setProfile((profiles as MyProfile[])[0] ?? null);
-      })
+      .then(data => setProfile(unwrapMineProfile(data)))
       .catch(() => setProfile(null))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
   if (loading) {
@@ -58,24 +52,38 @@ export default function MyProfilePage() {
   if (editOpen) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => setEditOpen(false)}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setEditOpen(false);
+            load();
+          }}
+        >
           {c('back')}
         </Button>
-        <ProfileWizard mode={profile.mode} editMode onComplete={() => setEditOpen(false)} />
+        <ProfileSectionEditor
+          mode={profile.mode}
+          loadFromMine
+          onComplete={() => {
+            setEditOpen(false);
+            load();
+          }}
+        />
       </div>
     );
   }
 
-  const sections = [
-    { label: 'Basic info', href: '/onboarding' },
-    { label: t('insights'), href: '/my-profile/insights' },
-    { label: t('verifications'), href: '/verifications' },
-    { label: t('family'), href: '/family' },
-  ];
-
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">{nav('myProfile')}</h1>
+    <div className="space-y-8 max-w-4xl">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">{nav('myProfile')}</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/profiles/${profile.id}`}>{t('previewBiodata')}</Link>
+          </Button>
+          <Button onClick={() => setEditOpen(true)}>{t('editBiodata')}</Button>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -83,30 +91,26 @@ export default function MyProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Mode: {profile.mode} · Status: {profile.status}
+            {profile.mode} · {profile.status}
           </p>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Completion</span>
-              <span>{profile.completionPercent}%</span>
+              <span>{profile.completionPercent ?? 0}%</span>
             </div>
-            <Progress value={profile.completionPercent} />
+            <Progress value={profile.completionPercent ?? 0} />
           </div>
-          <Button onClick={() => setEditOpen(true)}>Edit biodata</Button>
         </CardContent>
       </Card>
 
-      <div className="grid sm:grid-cols-2 gap-3">
-        {sections.map(s => (
-          <Link
-            key={s.href}
-            href={s.href}
-            className="rounded-xl border p-4 text-sm font-medium hover:bg-muted transition-colors"
-          >
-            {s.label}
-          </Link>
-        ))}
-      </div>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{t('previewBiodata')}</h2>
+        <p className="text-sm text-muted-foreground">
+          This is how others see your biodata (contact & guardian fields appear locked until
+          unlocked).
+        </p>
+        <ProfileDetailSheet profile={profile} showSectionNav={false} previewAsOwner />
+      </section>
     </div>
   );
 }

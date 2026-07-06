@@ -11,11 +11,7 @@ type DemoSpec = {
   divisionName: string;
   districtName: string;
   professionKey: string;
-  educationLevel:
-    | 'BACHELORS'
-    | 'MASTERS'
-    | 'HSC'
-    | 'MADRASA_QAWMI';
+  educationLevel: 'BACHELORS' | 'MASTERS' | 'HSC' | 'MADRASA_QAWMI';
   dob: string;
   islamic?: {
     prayerFrequency: 'FIVE_TIMES_DAILY' | 'MOSTLY' | 'SOMETIMES';

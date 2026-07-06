@@ -21,7 +21,11 @@ const tierStyles = {
   low: 'bg-muted text-muted-foreground',
 };
 
-export function CompatibilityBadge({ percent, className, showLabel = true }: CompatibilityBadgeProps) {
+export function CompatibilityBadge({
+  percent,
+  className,
+  showLabel = true,
+}: CompatibilityBadgeProps) {
   const t = tier(percent);
 
   return (

@@ -19,11 +19,18 @@ interface Story {
 }
 
 function storyTitle(story: Story, lang: 'en' | 'bn') {
-  return story.title?.[lang] ?? (lang === 'bn' ? story.titleBn : story.titleEn) ?? story.titleEn ?? '';
+  return (
+    story.title?.[lang] ?? (lang === 'bn' ? story.titleBn : story.titleEn) ?? story.titleEn ?? ''
+  );
 }
 
 function storyContent(story: Story, lang: 'en' | 'bn') {
-  return story.content?.[lang] ?? (lang === 'bn' ? story.contentBn : story.contentEn) ?? story.contentEn ?? '';
+  return (
+    story.content?.[lang] ??
+    (lang === 'bn' ? story.contentBn : story.contentEn) ??
+    story.contentEn ??
+    ''
+  );
 }
 
 export default function SuccessStoriesPage() {
@@ -37,7 +44,7 @@ export default function SuccessStoriesPage() {
     contentApi
       .successStories()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: Story[] })?.items ?? [];
+        const list = Array.isArray(data) ? data : ((data as { items?: Story[] })?.items ?? []);
         setStories(list);
       })
       .catch(() => setStories([]))
@@ -69,7 +76,9 @@ export default function SuccessStoriesPage() {
                 <CardTitle className="text-lg">{storyTitle(story, lang)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{storyContent(story, lang)}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  {storyContent(story, lang)}
+                </p>
               </CardContent>
             </Card>
           ))}

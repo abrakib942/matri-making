@@ -32,7 +32,7 @@ export default function AboutPage() {
 
   return (
     <div className="container py-12 md:py-16 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-8">{loading ? t('about') : title ?? t('about')}</h1>
+      <h1 className="text-4xl font-bold mb-8">{loading ? t('about') : (title ?? t('about'))}</h1>
       {loading ? (
         <div className="space-y-4">
           <Skeleton className="h-4 w-full" />

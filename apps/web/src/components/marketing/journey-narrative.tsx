@@ -16,7 +16,10 @@ export function JourneyNarrative() {
         <h2 className="text-h2 text-center mb-16 text-balance">{t('journeyTitle')}</h2>
 
         <div className="relative space-y-0">
-          <div className="absolute left-[19px] top-4 bottom-4 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent" aria-hidden />
+          <div
+            className="absolute left-[19px] top-4 bottom-4 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent"
+            aria-hidden
+          />
 
           {stepKeys.map((key, i) => (
             <motion.div

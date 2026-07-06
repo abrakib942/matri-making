@@ -53,7 +53,7 @@ const FLAG_RULES: FlagRule[] = [
     key: 'NON_SMOKER',
     applies: p =>
       p.mode === 'ISLAMIC'
-        ? true && p.generalDetails?.smoking !== 'REGULARLY'
+        ? p.generalDetails?.smoking !== 'REGULARLY'
         : p.generalDetails?.smoking === 'NEVER' || p.generalDetails?.smoking === 'QUIT',
   },
   {

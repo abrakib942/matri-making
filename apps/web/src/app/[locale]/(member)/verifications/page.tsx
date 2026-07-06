@@ -34,7 +34,9 @@ export default function VerificationsPage() {
     verificationApi
       .list()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: Verification[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: Verification[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))
@@ -72,10 +74,20 @@ export default function VerificationsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <EnumSelect category="verificationType" label="Type" value={type} onChange={setType} required />
+            <EnumSelect
+              category="verificationType"
+              label="Type"
+              value={type}
+              onChange={setType}
+              required
+            />
             <div className="space-y-2">
               <Label>Evidence URL (optional)</Label>
-              <Input value={evidenceUrl} onChange={e => setEvidenceUrl(e.target.value)} placeholder="https://..." />
+              <Input
+                value={evidenceUrl}
+                onChange={e => setEvidenceUrl(e.target.value)}
+                placeholder="https://..."
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" disabled={submitting || !type}>
@@ -97,9 +109,14 @@ export default function VerificationsPage() {
           ) : (
             <ul className="space-y-3">
               {items.map(v => (
-                <li key={v.id} className="flex items-center justify-between text-sm border-b pb-3 last:border-0">
+                <li
+                  key={v.id}
+                  className="flex items-center justify-between text-sm border-b pb-3 last:border-0"
+                >
                   <span className="font-medium">{v.type.replace(/_/g, ' ')}</span>
-                  <Badge variant={v.status === 'APPROVED' ? 'success' : 'secondary'}>{v.status}</Badge>
+                  <Badge variant={v.status === 'APPROVED' ? 'success' : 'secondary'}>
+                    {v.status}
+                  </Badge>
                 </li>
               ))}
             </ul>

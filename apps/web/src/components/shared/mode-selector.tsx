@@ -52,7 +52,12 @@ export function ModeSelector({ className, onSelect, selected }: ModeSelectorProp
             )}
             onClick={() => onSelect?.(mode.id)}
           >
-            <div className={cn('inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white', mode.accent)}>
+            <div
+              className={cn(
+                'inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white',
+                mode.accent,
+              )}
+            >
               <Icon className="h-6 w-6" aria-hidden />
             </div>
             <div>
@@ -67,7 +72,11 @@ export function ModeSelector({ className, onSelect, selected }: ModeSelectorProp
                 </li>
               ))}
             </ul>
-            <Button asChild className="w-full rounded-full" variant={isSelected ? 'default' : 'outline'}>
+            <Button
+              asChild
+              className="w-full rounded-full"
+              variant={isSelected ? 'default' : 'outline'}
+            >
               <Link href={onSelect ? '#' : mode.href} onClick={e => onSelect && e.preventDefault()}>
                 {t('continue')}
               </Link>

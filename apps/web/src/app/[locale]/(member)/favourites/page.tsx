@@ -16,7 +16,9 @@ export default function FavouritesPage() {
     interestApi
       .listFavourites()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: BiodataCardType[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: BiodataCardType[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))

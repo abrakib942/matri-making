@@ -16,7 +16,9 @@ export default function RecommendationsPage() {
     intelligenceApi
       .recommendations()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: BiodataCardType[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: BiodataCardType[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))
@@ -34,7 +36,9 @@ export default function RecommendationsPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">No recommendations yet. Complete your profile for better matches.</p>
+        <p className="text-muted-foreground text-center py-12">
+          No recommendations yet. Complete your profile for better matches.
+        </p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map(p => (

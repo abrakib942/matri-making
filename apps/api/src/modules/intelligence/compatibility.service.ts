@@ -76,7 +76,9 @@ export class CompatibilityService {
     const target = (viewerIsLow ? profileHigh : profileLow) as ScorableProfile;
 
     const stale =
-      !cached || cached.computedAt < profileLow.updatedAt || cached.computedAt < profileHigh.updatedAt;
+      !cached ||
+      cached.computedAt < profileLow.updatedAt ||
+      cached.computedAt < profileHigh.updatedAt;
 
     if (!stale && cached) {
       const parsed = parseExtendedBreakdown(cached.breakdown);

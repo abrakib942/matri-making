@@ -1,6 +1,7 @@
 import { DbService } from '@/db/db.service';
 import { InAppNotificationService } from '@/modules/notification/notification.service';
 import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MutualMatchService {
@@ -96,22 +97,29 @@ export class MutualMatchService {
     });
   }
 
-  async applyDiscountIfEligible(
+  async checkDiscountEligibility(
     viewerProfileId: number,
     targetProfileId: number,
-  ): Promise<{ applied: boolean; mutualMatchId?: number }> {
+  ): Promise<{ eligible: boolean; mutualMatchId?: number; isLow?: boolean }> {
     const match = await this.findForPair(viewerProfileId, targetProfileId);
-    if (!match) return { applied: false };
+    if (!match) return { eligible: false };
 
     const isLow = match.profileLowId === viewerProfileId;
     const alreadyUsed = isLow ? match.discountUsedByLow : match.discountUsedByHigh;
-    if (alreadyUsed) return { applied: false, mutualMatchId: match.id };
+    if (alreadyUsed) return { eligible: false, mutualMatchId: match.id, isLow };
 
-    await this.db.mutualMatch.update({
-      where: { id: match.id },
+    return { eligible: true, mutualMatchId: match.id, isLow };
+  }
+
+  async commitDiscount(
+    mutualMatchId: number,
+    isLow: boolean,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.db;
+    await client.mutualMatch.update({
+      where: { id: mutualMatchId },
       data: isLow ? { discountUsedByLow: true } : { discountUsedByHigh: true },
     });
-
-    return { applied: true, mutualMatchId: match.id };
   }
 }

@@ -41,7 +41,9 @@ export function SiteHeader({ minimal }: SiteHeaderProps = {}) {
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold tracking-tight">
             LM
           </span>
-          <span className="hidden sm:inline font-semibold tracking-tight font-bengali">{t('appName')}</span>
+          <span className="hidden sm:inline font-semibold tracking-tight font-bengali">
+            {t('appName')}
+          </span>
         </Link>
 
         {!minimal && (
@@ -50,10 +52,7 @@ export function SiteHeader({ minimal }: SiteHeaderProps = {}) {
               <Link
                 key={href}
                 href={href}
-                className={cn(
-                  'nav-pill-link',
-                  pathname.startsWith(href) && 'nav-pill-link-active',
-                )}
+                className={cn('nav-pill-link', pathname.startsWith(href) && 'nav-pill-link-active')}
               >
                 {nav(key)}
               </Link>
@@ -70,7 +69,12 @@ export function SiteHeader({ minimal }: SiteHeaderProps = {}) {
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex rounded-full">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:inline-flex rounded-full"
+                  >
                     <Link href="/login">{t('login')}</Link>
                   </Button>
                   <Button asChild size="sm" className="hidden md:inline-flex rounded-full">
@@ -135,19 +139,38 @@ export function SiteHeader({ minimal }: SiteHeaderProps = {}) {
           ))}
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="rounded-xl px-4 py-3 text-sm">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl px-4 py-3 text-sm"
+              >
                 {t('dashboard')}
               </Link>
-              <button type="button" className="rounded-xl px-4 py-3 text-sm text-left" onClick={() => { logout(); setMobileOpen(false); }}>
+              <button
+                type="button"
+                className="rounded-xl px-4 py-3 text-sm text-left"
+                onClick={() => {
+                  logout();
+                  setMobileOpen(false);
+                }}
+              >
                 {t('logout')}
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded-xl px-4 py-3 text-sm">
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl px-4 py-3 text-sm"
+              >
                 {t('login')}
               </Link>
-              <Link href="/register" onClick={() => setMobileOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-primary">
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-primary"
+              >
                 {t('register')}
               </Link>
             </>

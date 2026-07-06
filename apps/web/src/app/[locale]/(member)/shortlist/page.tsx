@@ -20,7 +20,9 @@ export default function ShortlistPage() {
     interestApi
       .listShortlist()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: BiodataCardType[] })?.items ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : ((data as { items?: BiodataCardType[] })?.items ?? []);
         setItems(list);
       })
       .catch(() => setItems([]))

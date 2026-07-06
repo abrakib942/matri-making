@@ -92,7 +92,12 @@ export default function VerifyPage() {
           </Button>
         </form>
         <div className="flex flex-col items-center gap-2 mt-6 text-sm">
-          <Button type="button" variant="link" onClick={handleResend} disabled={resending || !email}>
+          <Button
+            type="button"
+            variant="link"
+            onClick={handleResend}
+            disabled={resending || !email}
+          >
             {resending ? c('loading') : t('resendOtp')}
           </Button>
           <Link href="/login" className="text-muted-foreground hover:underline">

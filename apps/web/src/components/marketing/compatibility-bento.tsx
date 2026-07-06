@@ -7,10 +7,25 @@ export function CompatibilityBento() {
   const t = useTranslations('home');
 
   const items = [
-    { icon: Brain, title: t('bentoCompatibility'), desc: t('bentoCompatibilityDesc'), className: 'md:col-span-2' },
-    { icon: Fingerprint, title: t('bentoGreenFlags'), desc: t('bentoGreenFlagsDesc'), className: '' },
+    {
+      icon: Brain,
+      title: t('bentoCompatibility'),
+      desc: t('bentoCompatibilityDesc'),
+      className: 'md:col-span-2',
+    },
+    {
+      icon: Fingerprint,
+      title: t('bentoGreenFlags'),
+      desc: t('bentoGreenFlagsDesc'),
+      className: '',
+    },
     { icon: ShieldCheck, title: t('bentoPrivacy'), desc: t('bentoPrivacyDesc'), className: '' },
-    { icon: Users, title: t('bentoFamily'), desc: t('bentoFamilyDesc'), className: 'md:col-span-2' },
+    {
+      icon: Users,
+      title: t('bentoFamily'),
+      desc: t('bentoFamilyDesc'),
+      className: 'md:col-span-2',
+    },
   ];
 
   return (
@@ -23,10 +38,7 @@ export function CompatibilityBento() {
 
         <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {items.map(({ icon: Icon, title, desc, className }) => (
-            <div
-              key={title}
-              className={`glass-panel p-6 md:p-8 space-y-4 ${className}`}
-            >
+            <div key={title} className={`glass-panel p-6 md:p-8 space-y-4 ${className}`}>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" aria-hidden />
               </div>

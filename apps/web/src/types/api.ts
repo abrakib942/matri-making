@@ -46,6 +46,40 @@ export interface BiodataCard {
   photoUrl?: string | null;
   viewCount?: number;
   compatibilityPercent?: number;
+  mandatoryMatchPercent?: number;
+  overallMatchPercent?: number;
+}
+
+export interface MatchBreakdown {
+  key: string;
+  score: number;
+  label?: string;
+}
+
+export interface CompatibilityResult {
+  overallPercent: number;
+  mandatoryPercent: number;
+  breakdown: MatchBreakdown[];
+  mandatoryBreakdown: MatchBreakdown[];
+}
+
+export interface MutualMatchItem {
+  mutualMatchId: number;
+  profileId: number;
+  biodataNo: string;
+  mandatoryPercent?: number | null;
+  discountAvailable: boolean;
+  detectedAt?: string;
+}
+
+export interface ChatRoomSummary {
+  id: number;
+  expiresAt: string;
+  status: string;
+  waliMonitoring: boolean;
+  participantRole?: string;
+  lastMessage?: { id: number; body: string; createdAt: string } | null;
+  otherProfile: BiodataCard;
 }
 
 export interface DivisionStat {
@@ -56,11 +90,21 @@ export interface DivisionStat {
   brides: number;
 }
 
+export interface ModeGenderStats {
+  male: number;
+  female: number;
+  total: number;
+}
+
 export interface PublicStats {
   totalBiodatas: number;
   grooms: number;
   brides: number;
   successfulMarriages: number;
+  byMode?: {
+    ISLAMIC: ModeGenderStats;
+    GENERAL: ModeGenderStats;
+  };
   divisions: DivisionStat[];
 }
 
@@ -92,6 +136,41 @@ export interface PlanItem {
   features: Record<string, unknown>;
 }
 
+export interface CreditPackageItem {
+  key: string;
+  nameEn: string;
+  nameBn?: string | null;
+  credits: number;
+  pricePaisa: number;
+}
+
+export interface CreditLedgerEntry {
+  id: number;
+  type: string;
+  amount: number;
+  reference?: string | null;
+  note?: string | null;
+  createdAt: string;
+}
+
+export interface WalletData {
+  userId?: number;
+  balance: number;
+  entries: CreditLedgerEntry[];
+}
+
+export interface UnlockResult {
+  id: number;
+  creditsCharged?: number;
+  discountApplied?: boolean;
+  chatRoom?: {
+    id: number;
+    expiresAt: string;
+    waliMonitoring: boolean;
+  } | null;
+  contactRevealed?: boolean;
+}
+
 export interface DashboardData {
   profile?: {
     id: number;
@@ -111,4 +190,5 @@ export interface DashboardData {
   recommendations?: BiodataCard[];
   recentVisitors?: unknown[];
   notifications?: unknown[];
+  mutualMatches?: { count: number; items: MutualMatchItem[] };
 }

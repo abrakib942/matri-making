@@ -32,7 +32,7 @@ export default function SupportPage() {
     ticketApi
       .list()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: Ticket[] })?.items ?? [];
+        const list = Array.isArray(data) ? data : ((data as { items?: Ticket[] })?.items ?? []);
         setTickets(list);
       })
       .catch(() => setTickets([]))
@@ -75,7 +75,12 @@ export default function SupportPage() {
             </div>
             <div className="space-y-2">
               <Label>Message</Label>
-              <Textarea value={message} onChange={e => setMessage(e.target.value)} required rows={4} />
+              <Textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                required
+                rows={4}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" disabled={submitting}>

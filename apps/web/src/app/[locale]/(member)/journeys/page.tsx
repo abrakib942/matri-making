@@ -28,7 +28,7 @@ export default function JourneysPage() {
     journeyApi
       .list()
       .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as { items?: Journey[] })?.items ?? [];
+        const list = Array.isArray(data) ? data : ((data as { items?: Journey[] })?.items ?? []);
         setJourneys(list);
         const edits: Record<number, string> = {};
         list.forEach(j => {
@@ -63,7 +63,9 @@ export default function JourneysPage() {
       {loading ? (
         <Skeleton className="h-32 rounded-xl" />
       ) : journeys.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">No active journeys. Accept an interest to start one.</p>
+        <p className="text-muted-foreground text-center py-12">
+          No active journeys. Accept an interest to start one.
+        </p>
       ) : (
         <div className="space-y-4">
           {journeys.map(j => (

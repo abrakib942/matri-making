@@ -3,20 +3,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     },
     "noEmit": true
   },
-  "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    "../../packages/typescript-config/next-env.d.ts",
-    "../../packages/typescript-config/**/*.ts",
-    "../../packages/typescript-config/**/*.tsx",
-    "../../packages/typescript-config/.next/types/**/*.ts",
-    ".next/types/**/*.ts"
-  ]
+  "exclude": ["node_modules"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
 }
