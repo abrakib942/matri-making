@@ -9,5 +9,5 @@ import { SearchProfilesDto } from './dto/index';
 export const SEARCH_SERVICE = 'SEARCH_SERVICE';
 
 export interface ISearchService {
-  searchProfiles(viewerUserId: number, dto: SearchProfilesDto): Promise<ServiceResult>;
+  searchProfiles(viewerUserId: number | null, dto: SearchProfilesDto): Promise<ServiceResult>;
 }

@@ -1,6 +1,8 @@
 import { createSuccessResult, ServiceResult } from '@/common/interfaces/service-result.interface';
 import { DbService } from '@/db/db.service';
 import { RecommendationService } from '@/modules/intelligence/recommendation.service';
+import { MutualMatchService } from '@/modules/interest/mutual-match.service';
+import { CompatibilityService } from '@/modules/intelligence/compatibility.service';
 import { ProfileAccessService } from '@/modules/profile/profile-access.service';
 import { Inject, Injectable } from '@nestjs/common';
 
@@ -27,6 +29,12 @@ export class DashboardService {
 
   @Inject()
   private readonly recommendations: RecommendationService;
+
+  @Inject()
+  private readonly mutualMatch: MutualMatchService;
+
+  @Inject()
+  private readonly compatibility: CompatibilityService;
 
   async getDashboard(userId: number): Promise<ServiceResult> {
     const profileId = await this.access.getPrimaryProfileId(userId);
@@ -102,6 +110,17 @@ export class DashboardService {
       ? (recommendationResult.data as unknown[]).slice(0, 6)
       : [];
 
+    const mutualItems = await this.mutualMatch.listForProfile(profileId);
+    const mutualWithScores = await Promise.all(
+      mutualItems.map(async item => {
+        const scores = await this.compatibility.getOrComputeScore(profileId, item.profileId);
+        return {
+          ...item,
+          mandatoryPercent: scores?.mandatoryPercent ?? null,
+        };
+      }),
+    );
+
     return createSuccessResult(
       {
         hasProfile: true,
@@ -115,6 +134,7 @@ export class DashboardService {
           shortlistCount,
           unreadNotifications,
         },
+        mutualMatches: { count: mutualWithScores.length, items: mutualWithScores },
         recentVisitors,
         recommendedMatches,
         activityTimeline: recentNotifications,

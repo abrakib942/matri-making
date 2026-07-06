@@ -135,6 +135,11 @@ export const ENUM_CATALOG: Record<string, EnumEntry[]> = {
     { value: 'CONDITIONAL', en: 'Conditional', bn: 'শর্তসাপেক্ষ' },
     { value: 'NOT_APPLICABLE', en: 'Not applicable', bn: 'প্রযোজ্য নয়' },
   ],
+  viewsOnLoans: [
+    { value: 'AVOID', en: 'Avoid loans', bn: 'ঋণ এড়িয়ে চলি' },
+    { value: 'NECESSARY_ONLY', en: 'Necessary only', bn: 'প্রয়োজনে মাত্র' },
+    { value: 'FLEXIBLE', en: 'Flexible', bn: 'নমনীয়' },
+  ],
   guardianRelation: [
     { value: 'FATHER', en: 'Father', bn: 'পিতা' },
     { value: 'MOTHER', en: 'Mother', bn: 'মাতা' },

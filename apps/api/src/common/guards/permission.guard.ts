@@ -7,10 +7,10 @@ import { CHECK_ABILITY_KEY, RequiredAbility } from '@/common/decorators';
 @Injectable()
 export class PermissionGuard extends JwtGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
+    reflector: Reflector,
     private readonly abilityFactory: AbilityFactory,
   ) {
-    super();
+    super(reflector);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

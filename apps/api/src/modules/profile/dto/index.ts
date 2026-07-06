@@ -26,6 +26,7 @@ import {
   QuranRecitation,
   Religion,
   SmokingHabit,
+  ViewsOnLoans,
 } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
@@ -130,6 +131,11 @@ export class UpdateProfileDto {
   @IsInt()
   @IsOptional()
   upazilaId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(120)
+  areaName?: string;
 
   @IsString()
   @IsOptional()
@@ -340,6 +346,10 @@ export class UpdateIslamicDetailsDto {
   @IsBoolean()
   @IsOptional()
   waliApproves?: boolean;
+
+  @IsEnum(ViewsOnLoans)
+  @IsOptional()
+  viewsOnLoans?: ViewsOnLoans;
 }
 
 export class UpdateGeneralDetailsDto {
@@ -455,6 +465,10 @@ export class UpdatePreferenceDto {
   @IsEnum(QuranMemorization)
   @IsOptional()
   quranExpectation?: QuranMemorization;
+
+  @IsEnum(ViewsOnLoans)
+  @IsOptional()
+  viewsOnLoansExpect?: ViewsOnLoans;
 
   @IsBoolean()
   @IsOptional()

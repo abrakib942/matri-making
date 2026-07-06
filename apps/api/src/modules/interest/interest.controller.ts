@@ -80,6 +80,12 @@ export class InterestController {
     return await this.interestService.listShortlist(userId);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @Get('api/v1/me/mutual-matches')
+  async listMutualMatches(@GetUser('id') userId: number) {
+    return await this.interestService.listMutualMatches(userId);
+  }
+
   // ---------- favourite ----------
 
   @HttpCode(HttpStatus.OK)

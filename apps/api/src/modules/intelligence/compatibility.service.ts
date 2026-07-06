@@ -7,6 +7,11 @@ import { DbService } from '@/db/db.service';
 import { ProfileAccessService } from '@/modules/profile/profile-access.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import {
+  buildExtendedBreakdown,
+  computeMandatoryOverlap,
+  parseExtendedBreakdown,
+} from './preference-matrix';
 import { computeCompatibility, ScorableProfile } from './scorers';
 
 const SCORABLE_INCLUDE = {
@@ -14,6 +19,13 @@ const SCORABLE_INCLUDE = {
   generalDetails: true,
   preference: true,
 } as const;
+
+export interface CompatibilityResult {
+  overallPercent: number;
+  mandatoryPercent: number;
+  breakdown: unknown[];
+  mandatoryBreakdown: unknown[];
+}
 
 @Injectable()
 export class CompatibilityService {
@@ -27,17 +39,30 @@ export class CompatibilityService {
     return profileAId < profileBId ? [profileAId, profileBId] : [profileBId, profileAId];
   }
 
+  private computeFull(viewer: ScorableProfile, target: ScorableProfile): CompatibilityResult {
+    const overall = computeCompatibility(viewer, target);
+    const mandatory = computeMandatoryOverlap(viewer, target);
+
+    return {
+      overallPercent: overall.score,
+      mandatoryPercent: mandatory.percent,
+      breakdown: overall.breakdown,
+      mandatoryBreakdown: mandatory.breakdown,
+    };
+  }
+
   /**
    * Returns a cached score, recomputing when either profile changed since the
    * cache entry was written.
    */
   async getOrComputeScore(
-    profileAId: number,
-    profileBId: number,
-  ): Promise<{ score: number; breakdown: unknown } | null> {
-    const [lowId, highId] = this.cacheKey(profileAId, profileBId);
+    viewerProfileId: number,
+    targetProfileId: number,
+  ): Promise<CompatibilityResult | null> {
+    const [lowId, highId] = this.cacheKey(viewerProfileId, targetProfileId);
+    const viewerIsLow = viewerProfileId === lowId;
 
-    const [profileA, profileB, cached] = await Promise.all([
+    const [profileLow, profileHigh, cached] = await Promise.all([
       this.db.profile.findUnique({ where: { id: lowId }, include: SCORABLE_INCLUDE }),
       this.db.profile.findUnique({ where: { id: highId }, include: SCORABLE_INCLUDE }),
       this.db.matchScore.findUnique({
@@ -45,33 +70,48 @@ export class CompatibilityService {
       }),
     ]);
 
-    if (!profileA || !profileB) return null;
+    if (!profileLow || !profileHigh) return null;
+
+    const viewer = (viewerIsLow ? profileLow : profileHigh) as ScorableProfile;
+    const target = (viewerIsLow ? profileHigh : profileLow) as ScorableProfile;
 
     const stale =
-      !cached || cached.computedAt < profileA.updatedAt || cached.computedAt < profileB.updatedAt;
+      !cached || cached.computedAt < profileLow.updatedAt || cached.computedAt < profileHigh.updatedAt;
 
-    if (!stale) {
-      return { score: cached.score, breakdown: cached.breakdown };
+    if (!stale && cached) {
+      const parsed = parseExtendedBreakdown(cached.breakdown);
+      if (parsed) {
+        return {
+          overallPercent: cached.score,
+          mandatoryPercent: parsed.mandatory.percent,
+          breakdown: parsed.dimensions,
+          mandatoryBreakdown: parsed.mandatory.breakdown,
+        };
+      }
     }
 
-    const result = computeCompatibility(profileA as ScorableProfile, profileB as ScorableProfile);
+    const result = this.computeFull(viewer, target);
+    const extended = buildExtendedBreakdown(
+      result.breakdown as ReturnType<typeof computeCompatibility>['breakdown'],
+      { percent: result.mandatoryPercent, breakdown: result.mandatoryBreakdown as never },
+    );
 
     await this.db.matchScore.upsert({
       where: { profileAId_profileBId: { profileAId: lowId, profileBId: highId } },
       update: {
-        score: result.score,
-        breakdown: result.breakdown as unknown as Prisma.InputJsonValue,
+        score: result.overallPercent,
+        breakdown: extended as unknown as Prisma.InputJsonValue,
         computedAt: new Date(),
       },
       create: {
         profileAId: lowId,
         profileBId: highId,
-        score: result.score,
-        breakdown: result.breakdown as unknown as Prisma.InputJsonValue,
+        score: result.overallPercent,
+        breakdown: extended as unknown as Prisma.InputJsonValue,
       },
     });
 
-    return { score: result.score, breakdown: result.breakdown };
+    return result;
   }
 
   async getCompatibility(viewerUserId: number, targetProfileId: number): Promise<ServiceResult> {

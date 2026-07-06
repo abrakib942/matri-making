@@ -1,4 +1,4 @@
-import { GetUser } from '@/common/decorators';
+import { GetOptionalUserId, GetUser, Public } from '@/common/decorators';
 import { JwtGuard } from '@/common/guards';
 import {
   Body,
@@ -54,9 +54,10 @@ export class ProfileController {
     return await this.profileService.myInvites(userId);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Get('api/v1/profiles/:id')
-  async getById(@GetUser('id') userId: number, @Param('id', ParseIntPipe) id: number) {
+  async getById(@GetOptionalUserId() userId: number | null, @Param('id', ParseIntPipe) id: number) {
     return await this.profileService.getById(userId, id);
   }
 

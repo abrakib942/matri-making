@@ -1,4 +1,4 @@
-import { GetUser } from '@/common/decorators';
+import { GetOptionalUserId, Public } from '@/common/decorators';
 import { JwtGuard } from '@/common/guards';
 import { Body, Controller, HttpCode, HttpStatus, Inject, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -13,9 +13,10 @@ export class SearchController {
   @Inject(SEARCH_SERVICE)
   private readonly searchService: ISearchService;
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('api/v1/search/profiles')
-  async searchProfiles(@GetUser('id') userId: number, @Body() dto: SearchProfilesDto) {
+  async searchProfiles(@GetOptionalUserId() userId: number | null, @Body() dto: SearchProfilesDto) {
     return await this.searchService.searchProfiles(userId, dto);
   }
 }

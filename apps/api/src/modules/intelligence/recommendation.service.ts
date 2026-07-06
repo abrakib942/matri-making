@@ -133,7 +133,7 @@ export class RecommendationService {
     const scored = await Promise.all(
       candidates.map(async candidate => {
         const compat = await this.compatibility.getOrComputeScore(profileId, candidate.id);
-        const compatScore = compat?.score ?? 50;
+        const compatScore = compat?.overallPercent ?? 50;
 
         const daysSinceActive = (now - candidate.lastActiveAt.getTime()) / (24 * 60 * 60 * 1000);
         const recencyScore = Math.max(0, 100 - daysSinceActive * 5);

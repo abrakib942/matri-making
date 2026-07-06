@@ -119,6 +119,7 @@ model User {
   notifications        Notification[]
   reportsFiled         Report[]              @relation("Reporter")
   supportTickets       SupportTicket[]
+  chatParticipants     ChatParticipant[]
 }
 
 model RefreshToken {
@@ -304,6 +305,7 @@ model Profile {
   divisionId         Int?
   districtId         Int?
   upazilaId          Int?
+  areaName           String?         @db.VarChar(120)
   presentAddress     String?         @db.Text
   permanentAddress   String?         @db.Text
   isExpat            Boolean         @default(false)
@@ -357,24 +359,29 @@ model Profile {
   members         ProfileMember[]
   media           ProfileMedia[]
 
-  sentInterests     Interest[]       @relation("InterestFrom")
-  receivedInterests Interest[]       @relation("InterestTo")
-  shortlistedBy     Shortlist[]      @relation("ShortlistTarget")
-  shortlists        Shortlist[]      @relation("ShortlistOwner")
-  favouritedBy      Favourite[]      @relation("FavouriteTarget")
-  favourites        Favourite[]      @relation("FavouriteOwner")
-  blocksMade        Block[]          @relation("BlockOwner")
-  blockedBy         Block[]          @relation("BlockTarget")
-  notesWritten      ProfileNote[]    @relation("NoteOwner")
-  notesAbout        ProfileNote[]    @relation("NoteTarget")
-  visitsMade        ProfileVisit[]   @relation("VisitVisitor")
-  visitsReceived    ProfileVisit[]   @relation("VisitTarget")
-  scoresAsA         MatchScore[]     @relation("ScoreProfileA")
-  scoresAsB         MatchScore[]     @relation("ScoreProfileB")
-  insights          ProfileInsight[]
-  unlocks           BiodataUnlock[]
-  reportsAgainst    Report[]         @relation("ReportedProfile")
-  successStories    SuccessStory[]
+  sentInterests       Interest[]       @relation("InterestFrom")
+  receivedInterests   Interest[]       @relation("InterestTo")
+  shortlistedBy       Shortlist[]      @relation("ShortlistTarget")
+  shortlists          Shortlist[]      @relation("ShortlistOwner")
+  favouritedBy        Favourite[]      @relation("FavouriteTarget")
+  favourites          Favourite[]      @relation("FavouriteOwner")
+  blocksMade          Block[]          @relation("BlockOwner")
+  blockedBy           Block[]          @relation("BlockTarget")
+  notesWritten        ProfileNote[]    @relation("NoteOwner")
+  notesAbout          ProfileNote[]    @relation("NoteTarget")
+  visitsMade          ProfileVisit[]   @relation("VisitVisitor")
+  visitsReceived      ProfileVisit[]   @relation("VisitTarget")
+  scoresAsA           MatchScore[]     @relation("ScoreProfileA")
+  scoresAsB           MatchScore[]     @relation("ScoreProfileB")
+  insights            ProfileInsight[]
+  unlocks             BiodataUnlock[]
+  reportsAgainst      Report[]         @relation("ReportedProfile")
+  successStories      SuccessStory[]
+  mutualMatchesAsLow  MutualMatch[]    @relation("MutualMatchLow")
+  mutualMatchesAsHigh MutualMatch[]    @relation("MutualMatchHigh")
+  chatRoomsAsA        ChatRoom[]       @relation("ChatRoomA")
+  chatRoomsAsB        ChatRoom[]       @relation("ChatRoomB")
+  chatMessagesSent    ChatMessage[]
 
   @@index([mode, status, gender])
   @@index([districtId])
@@ -462,6 +469,12 @@ enum GuardianRelation {
   OTHER
 }
 
+enum ViewsOnLoans {
+  AVOID
+  NECESSARY_ONLY
+  FLEXIBLE
+}
+
 model IslamicProfileDetails {
   id                   Int                 @id @default(autoincrement())
   profileId            Int                 @unique
@@ -491,6 +504,7 @@ model IslamicProfileDetails {
   waliRelation         GuardianRelation?
   waliPhone            String?
   waliApproves         Boolean?
+  viewsOnLoans         ViewsOnLoans?
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -567,6 +581,7 @@ model PartnerPreference {
   hijabExpectation   HijabStyle?
   beardExpectation   BeardStyle?
   quranExpectation   QuranMemorization?
+  viewsOnLoansExpect ViewsOnLoans?
   acceptsChildren    Boolean?
   acceptsExpat       Boolean?
   languages          String[]           @default([])
@@ -724,6 +739,92 @@ model Shortlist {
   @@unique([ownerProfileId, targetProfileId])
 }
 
+// ============================================================
+// Mutual match (reciprocal shortlist)
+// ============================================================
+
+model MutualMatch {
+  id                 Int       @id @default(autoincrement())
+  profileLowId       Int
+  profileHighId      Int
+  detectedAt         DateTime  @default(now())
+  notifiedAt         DateTime?
+  discountUsedByLow  Boolean   @default(false)
+  discountUsedByHigh Boolean   @default(false)
+
+  profileLow  Profile @relation("MutualMatchLow", fields: [profileLowId], references: [id], onDelete: Cascade)
+  profileHigh Profile @relation("MutualMatchHigh", fields: [profileHighId], references: [id], onDelete: Cascade)
+
+  @@unique([profileLowId, profileHighId])
+  @@index([profileLowId])
+  @@index([profileHighId])
+}
+
+// ============================================================
+// Secure chat sandbox
+// ============================================================
+
+enum ChatRoomStatus {
+  ACTIVE
+  EXPIRED
+  CLOSED
+}
+
+enum ChatParticipantRole {
+  MEMBER
+  WALI
+  READONLY
+}
+
+model ChatRoom {
+  id         Int            @id @default(autoincrement())
+  profileAId Int
+  profileBId Int
+  mode       ProfileMode
+  unlockId   Int?
+  expiresAt  DateTime
+  status     ChatRoomStatus @default(ACTIVE)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  profileA     Profile           @relation("ChatRoomA", fields: [profileAId], references: [id], onDelete: Cascade)
+  profileB     Profile           @relation("ChatRoomB", fields: [profileBId], references: [id], onDelete: Cascade)
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+
+  @@index([profileAId])
+  @@index([profileBId])
+  @@index([expiresAt, status])
+}
+
+model ChatParticipant {
+  id        Int                 @id @default(autoincrement())
+  roomId    Int
+  userId    Int
+  profileId Int?
+  role      ChatParticipantRole @default(MEMBER)
+  joinedAt  DateTime            @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id              Int      @id @default(autoincrement())
+  roomId          Int
+  senderProfileId Int
+  body            String   @db.Text
+  createdAt       DateTime @default(now())
+
+  room          ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderProfile Profile  @relation(fields: [senderProfileId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+}
+
 model Favourite {
   id              Int      @id @default(autoincrement())
   ownerProfileId  Int
@@ -832,6 +933,8 @@ enum NotificationType {
   SUBSCRIPTION_ACTIVATED
   MEMBER_INVITE
   JOURNEY_UPDATED
+  MUTUAL_MATCH
+  CHAT_MESSAGE
   SYSTEM
 }
 

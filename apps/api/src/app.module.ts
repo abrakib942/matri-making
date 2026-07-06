@@ -28,6 +28,7 @@ import { ReportModule } from './modules/report/report.module';
 import { SearchModule } from './modules/search/search.module';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { VerificationModule } from './modules/verification/verification.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     ReportModule,
     ContentModule,
     TicketModule,
+    ChatModule,
   ],
   providers: [TransformInterceptor],
 })

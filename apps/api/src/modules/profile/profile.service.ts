@@ -169,7 +169,7 @@ export class ProfileService {
     return createSuccessResult(data, 'Profiles retrieved successfully');
   }
 
-  async getById(viewerUserId: number, id: number): Promise<ServiceResult> {
+  async getById(viewerUserId: number | null, id: number): Promise<ServiceResult> {
     const profile = await this.loadProfile(id);
 
     if (!profile) {
@@ -197,7 +197,7 @@ export class ProfileService {
     }
 
     // Record the visit against the viewer's primary profile.
-    if (!grant.isManager) {
+    if (!grant.isManager && viewerUserId != null) {
       const viewerMember = await this.db.profileMember.findFirst({
         where: { userId: viewerUserId, inviteStatus: 'ACCEPTED' },
         orderBy: { createdAt: 'asc' },

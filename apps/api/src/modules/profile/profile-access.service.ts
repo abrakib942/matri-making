@@ -10,6 +10,8 @@ export interface AccessGrant {
   canViewContact: boolean;
   canViewGuardian: boolean;
   canViewFullBiodata: boolean;
+  canAccessSafeChat: boolean;
+  activeChatRoomId: number | null;
 }
 
 export type ProfileForAccess = Prisma.ProfileGetPayload<{
@@ -29,6 +31,8 @@ const NO_ACCESS: AccessGrant = {
   canViewContact: false,
   canViewGuardian: false,
   canViewFullBiodata: false,
+  canAccessSafeChat: false,
+  activeChatRoomId: null,
 };
 
 /**
@@ -64,7 +68,47 @@ export class ProfileAccessService {
     return !!member && member.inviteStatus === 'ACCEPTED';
   }
 
-  async getAccessGrant(viewerUserId: number, profile: ProfileForAccess): Promise<AccessGrant> {
+  async getAccessGrant(
+    viewerUserId: number | null,
+    profile: ProfileForAccess,
+  ): Promise<AccessGrant> {
+    if (viewerUserId == null) {
+      const privacy = profile.privacySettings;
+      const visibility = privacy?.visibility ?? 'PUBLIC';
+
+      if (visibility !== 'PUBLIC') {
+        return { ...NO_ACCESS };
+      }
+
+      const photoPolicy = privacy?.photoPolicy ?? 'ON_UNLOCK';
+      let canViewPhoto = false;
+      let photoBlurredOnly = false;
+
+      switch (photoPolicy) {
+        case 'VISIBLE':
+          canViewPhoto = true;
+          break;
+        case 'BLURRED':
+          canViewPhoto = true;
+          photoBlurredOnly = true;
+          break;
+        default:
+          break;
+      }
+
+      return {
+        isManager: false,
+        canViewProfile: true,
+        canViewPhoto,
+        photoBlurredOnly,
+        canViewContact: false,
+        canViewGuardian: false,
+        canViewFullBiodata: false,
+        canAccessSafeChat: false,
+        activeChatRoomId: null,
+      };
+    }
+
     const isManager = await this.isManager(viewerUserId, profile.id);
 
     if (isManager) {
@@ -76,6 +120,8 @@ export class ProfileAccessService {
         canViewContact: true,
         canViewGuardian: true,
         canViewFullBiodata: true,
+        canAccessSafeChat: false,
+        activeChatRoomId: null,
       };
     }
 
@@ -193,6 +239,37 @@ export class ProfileAccessService {
         break;
     }
 
+    let canAccessSafeChat = false;
+    let activeChatRoomId: number | null = null;
+
+    if (hasUnlock('CONTACT') && viewerProfileIds.length > 0) {
+      const viewerProfileId = viewerProfileIds[0];
+      const [low, high] =
+        viewerProfileId < profile.id
+          ? [viewerProfileId, profile.id]
+          : [profile.id, viewerProfileId];
+
+      const room = await this.db.chatRoom.findFirst({
+        where: {
+          profileAId: low,
+          profileBId: high,
+          status: 'ACTIVE',
+          expiresAt: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+
+      if (room) {
+        canAccessSafeChat = true;
+        activeChatRoomId = room.id;
+      }
+    }
+
+    // Islamic CONTACT unlock opens safe chat — phone stays hidden until chat ends.
+    if (profile.mode === 'ISLAMIC' && hasUnlock('CONTACT')) {
+      canViewContact = false;
+    }
+
     return {
       isManager: false,
       canViewProfile: true,
@@ -201,6 +278,8 @@ export class ProfileAccessService {
       canViewContact,
       canViewGuardian: hasUnlock('GUARDIAN'),
       canViewFullBiodata: hasUnlock('FULL_BIODATA'),
+      canAccessSafeChat,
+      activeChatRoomId,
     };
   }
 

@@ -4,6 +4,7 @@ import {
   ServiceResult,
 } from '@/common/interfaces/service-result.interface';
 import { DbService } from '@/db/db.service';
+import { CompatibilityService } from '@/modules/intelligence/compatibility.service';
 import { FeatureGateService } from '@/modules/payment/feature-gate.service';
 import { ProfileAccessService } from '@/modules/profile/profile-access.service';
 import { Inject, Injectable } from '@nestjs/common';
@@ -30,11 +31,35 @@ export class PostgresSearchService implements ISearchService {
   @Inject()
   private readonly featureGate: FeatureGateService;
 
+  @Inject()
+  private readonly compatibility: CompatibilityService;
+
   /** Strip premium-only filters when the viewer lacks advancedFilters entitlement. */
   private async applyFilterEntitlements(
-    viewerUserId: number,
+    viewerUserId: number | null,
     dto: SearchProfilesDto,
   ): Promise<SearchProfilesDto> {
+    if (!viewerUserId) {
+      return {
+        ...dto,
+        incomeMin: undefined,
+        incomeMax: undefined,
+        languages: undefined,
+        familyStatuses: undefined,
+        minPrayerFrequency: undefined,
+        hijabStyles: undefined,
+        beardStyles: undefined,
+        quranMemorization: undefined,
+        madhhabs: undefined,
+        aqidahs: undefined,
+        verifiedOnly: undefined,
+        premiumOnly: undefined,
+        recentlyActiveDays: undefined,
+        minMatchScore: undefined,
+        sortBy: dto.sortBy === 'lastActive' ? undefined : dto.sortBy,
+      };
+    }
+
     const features = await this.featureGate.getFeatures(viewerUserId);
 
     if (features.advancedFilters) {
@@ -65,16 +90,21 @@ export class PostgresSearchService implements ISearchService {
     return PRAYER_ORDER.slice(0, index + 1);
   }
 
-  async searchProfiles(viewerUserId: number, dto: SearchProfilesDto): Promise<ServiceResult> {
+  async searchProfiles(
+    viewerUserId: number | null,
+    dto: SearchProfilesDto,
+  ): Promise<ServiceResult> {
     const filteredDto = await this.applyFilterEntitlements(viewerUserId, dto);
     const limit = filteredDto.limit ?? 20;
 
     // The viewer's own profiles are excluded; if the viewer has a profile,
     // results are locked to the opposite gender (gender-separated experience).
-    const viewerMemberships = await this.db.profileMember.findMany({
-      where: { userId: viewerUserId, inviteStatus: 'ACCEPTED' },
-      include: { profile: { select: { id: true, gender: true } } },
-    });
+    const viewerMemberships = viewerUserId
+      ? await this.db.profileMember.findMany({
+          where: { userId: viewerUserId, inviteStatus: 'ACCEPTED' },
+          include: { profile: { select: { id: true, gender: true } } },
+        })
+      : [];
 
     const viewerProfileIds = viewerMemberships.map(m => m.profile.id);
     const viewerGender = viewerMemberships[0]?.profile.gender;
@@ -85,10 +115,12 @@ export class PostgresSearchService implements ISearchService {
         : ('MALE' as const)
       : filteredDto.gender;
 
-    const viewer = await this.db.user.findUnique({
-      where: { id: viewerUserId },
-      select: { emailVerifiedAt: true, phoneVerifiedAt: true },
-    });
+    const viewer = viewerUserId
+      ? await this.db.user.findUnique({
+          where: { id: viewerUserId },
+          select: { emailVerifiedAt: true, phoneVerifiedAt: true },
+        })
+      : null;
     const viewerIsVerified = !!viewer?.emailVerifiedAt && !!viewer?.phoneVerifiedAt;
 
     const blocks = viewerProfileIds.length
@@ -156,6 +188,7 @@ export class PostgresSearchService implements ISearchService {
       where.maritalStatus = { in: filteredDto.maritalStatuses };
     if (filteredDto.districtIds?.length) where.districtId = { in: filteredDto.districtIds };
     if (filteredDto.divisionIds?.length) where.divisionId = { in: filteredDto.divisionIds };
+    if (filteredDto.upazilaIds?.length) where.upazilaId = { in: filteredDto.upazilaIds };
     if (filteredDto.isExpat !== undefined) where.isExpat = filteredDto.isExpat;
     if (filteredDto.educationLevels?.length)
       where.educationLevel = { in: filteredDto.educationLevels };
@@ -232,14 +265,38 @@ export class PostgresSearchService implements ISearchService {
     });
 
     const hasMore = profiles.length > limit;
-    const items = hasMore ? profiles.slice(0, limit) : profiles;
+    const rawItems = hasMore ? profiles.slice(0, limit) : profiles;
 
-    const cards = items.map(profile => this.toCard(profile));
+    const viewerProfileId = viewerProfileIds[0] ?? null;
+    let cards = await Promise.all(
+      rawItems.map(async profile => {
+        const card = this.toCard(profile);
+        if (!viewerProfileId) return card;
+
+        const scores = await this.compatibility.getOrComputeScore(viewerProfileId, profile.id);
+        if (!scores) return card;
+
+        return {
+          ...card,
+          mandatoryMatchPercent: scores.mandatoryPercent,
+          overallMatchPercent: scores.overallPercent,
+        };
+      }),
+    );
+
+    if (filteredDto.minMatchScore != null && viewerProfileId) {
+      cards = cards.filter(
+        c =>
+          (c as { mandatoryMatchPercent?: number }).mandatoryMatchPercent != null &&
+          (c as { mandatoryMatchPercent: number }).mandatoryMatchPercent >=
+            filteredDto.minMatchScore!,
+      );
+    }
 
     return createSuccessResult(
       {
         items: cards,
-        nextCursor: hasMore ? items[items.length - 1].id : null,
+        nextCursor: hasMore ? rawItems[rawItems.length - 1].id : null,
       },
       'Profiles retrieved successfully',
     );

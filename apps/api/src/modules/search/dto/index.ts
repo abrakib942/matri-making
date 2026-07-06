@@ -85,6 +85,12 @@ export class SearchProfilesDto {
   @IsOptional()
   divisionIds?: number[];
 
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  @IsOptional()
+  upazilaIds?: number[];
+
   @IsBoolean()
   @IsOptional()
   isExpat?: boolean;
@@ -186,4 +192,11 @@ export class SearchProfilesDto {
   @IsIn(['newest', 'lastActive'])
   @IsOptional()
   sortBy?: 'newest' | 'lastActive';
+
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  @Type(() => Number)
+  minMatchScore?: number;
 }

@@ -55,22 +55,34 @@ export class MetaService {
   async getStats(): Promise<ServiceResult> {
     const activeWhere = { status: ProfileStatus.ACTIVE };
 
-    const [totalBiodatas, grooms, brides, successfulMarriages, divisionGroups, divisions] =
-      await Promise.all([
-        this.db.profile.count({ where: activeWhere }),
-        this.db.profile.count({ where: { ...activeWhere, gender: Gender.MALE } }),
-        this.db.profile.count({ where: { ...activeWhere, gender: Gender.FEMALE } }),
-        this.db.successStory.count({ where: { status: GeneralStatus.ACTIVE } }),
-        this.db.profile.groupBy({
-          by: ['divisionId', 'gender'],
-          where: { ...activeWhere, divisionId: { not: null } },
-          _count: { _all: true },
-        }),
-        this.db.location.findMany({
-          where: { type: LocationType.DIVISION },
-          orderBy: { nameEn: 'asc' },
-        }),
-      ]);
+    const [
+      totalBiodatas,
+      grooms,
+      brides,
+      successfulMarriages,
+      divisionGroups,
+      divisions,
+      modeGenderGroups,
+    ] = await Promise.all([
+      this.db.profile.count({ where: activeWhere }),
+      this.db.profile.count({ where: { ...activeWhere, gender: Gender.MALE } }),
+      this.db.profile.count({ where: { ...activeWhere, gender: Gender.FEMALE } }),
+      this.db.successStory.count({ where: { status: GeneralStatus.ACTIVE } }),
+      this.db.profile.groupBy({
+        by: ['divisionId', 'gender'],
+        where: { ...activeWhere, divisionId: { not: null } },
+        _count: { _all: true },
+      }),
+      this.db.location.findMany({
+        where: { type: LocationType.DIVISION },
+        orderBy: { nameEn: 'asc' },
+      }),
+      this.db.profile.groupBy({
+        by: ['mode', 'gender'],
+        where: activeWhere,
+        _count: { _all: true },
+      }),
+    ]);
 
     const divisionMap = new Map<
       number,
@@ -102,9 +114,23 @@ export class MetaService {
       successfulMarriages: successfulMarriages || 0,
     };
 
+    const byMode = {
+      ISLAMIC: { male: 0, female: 0, total: 0 },
+      GENERAL: { male: 0, female: 0, total: 0 },
+    };
+
+    for (const row of modeGenderGroups) {
+      const entry = byMode[row.mode];
+      if (!entry) continue;
+      if (row.gender === Gender.MALE) entry.male = row._count._all;
+      else if (row.gender === Gender.FEMALE) entry.female = row._count._all;
+      entry.total = entry.male + entry.female;
+    }
+
     return createSuccessResult(
       {
         ...totals,
+        byMode,
         divisions: Array.from(divisionMap.values()),
       },
       'Public stats retrieved successfully',

@@ -4,7 +4,10 @@ import {
   ServiceResult,
 } from '@/common/interfaces/service-result.interface';
 import { DbService } from '@/db/db.service';
+import { ChatService } from '@/modules/chat/chat.service';
+import { MutualMatchService } from '@/modules/interest/mutual-match.service';
 import { InAppNotificationService } from '@/modules/notification/notification.service';
+import { ProfileAccessService } from '@/modules/profile/profile-access.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { UnlockType } from '@prisma/client';
 
@@ -21,6 +24,15 @@ export class UnlockService {
 
   @Inject()
   private readonly notifications: InAppNotificationService;
+
+  @Inject()
+  private readonly mutualMatch: MutualMatchService;
+
+  @Inject()
+  private readonly chat: ChatService;
+
+  @Inject()
+  private readonly access: ProfileAccessService;
 
   async unlockBiodata(userId: number, profileId: number, type: UnlockType): Promise<ServiceResult> {
     const profile = await this.db.profile.findUnique({ where: { id: profileId } });
@@ -54,7 +66,21 @@ export class UnlockService {
       );
     }
 
-    const cost = UNLOCK_COST[type];
+    const viewerProfileId = await this.access.getPrimaryProfileId(userId);
+    let baseCost = UNLOCK_COST[type];
+    let discountApplied = false;
+    let mutualMatchId: number | undefined;
+
+    if (viewerProfileId) {
+      const discount = await this.mutualMatch.applyDiscountIfEligible(viewerProfileId, profileId);
+      if (discount.applied) {
+        discountApplied = true;
+        mutualMatchId = discount.mutualMatchId;
+        baseCost = Math.max(1, Math.ceil(baseCost * 0.5));
+      }
+    }
+
+    const cost = baseCost;
 
     const result = await this.db.$transaction(async tx => {
       const wallet = await tx.creditWallet.findUnique({ where: { userId } });
@@ -74,7 +100,7 @@ export class UnlockService {
           type: 'SPEND_UNLOCK',
           amount: -cost,
           reference: `profile:${profileId}`,
-          note: `${type} unlock for biodata ${profile.biodataNo}`,
+          note: `${type} unlock for biodata ${profile.biodataNo}${discountApplied ? ' (mutual match 50%)' : ''}`,
         },
       });
 
@@ -111,7 +137,18 @@ export class UnlockService {
       );
     }
 
-    // Notify the biodata managers that someone unlocked their information.
+    let chatRoom = null;
+
+    if (type === 'CONTACT' && viewerProfileId) {
+      chatRoom = await this.chat.createRoomForUnlock({
+        viewerUserId: userId,
+        viewerProfileId,
+        targetProfileId: profileId,
+        unlockId: result.unlock.id,
+        targetMode: profile.mode,
+      });
+    }
+
     const members = await this.db.profileMember.findMany({
       where: { profileId, inviteStatus: 'ACCEPTED' },
       select: { userId: true },
@@ -130,7 +167,25 @@ export class UnlockService {
       ),
     );
 
-    return createSuccessResult(result.unlock, 'Biodata unlocked successfully');
+    return createSuccessResult(
+      {
+        ...result.unlock,
+        creditsCharged: cost,
+        discountApplied,
+        mutualMatchId,
+        chatRoom: chatRoom
+          ? {
+              id: chatRoom.id,
+              expiresAt: chatRoom.expiresAt,
+              waliMonitoring: profile.mode === 'ISLAMIC',
+            }
+          : null,
+        contactRevealed: type === 'CONTACT' && profile.mode === 'GENERAL',
+      },
+      profile.mode === 'ISLAMIC' && type === 'CONTACT'
+        ? 'Safe chat opened for 14 days'
+        : 'Biodata unlocked successfully',
+    );
   }
 
   async listMyUnlocks(userId: number): Promise<ServiceResult> {

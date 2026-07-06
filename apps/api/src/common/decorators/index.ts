@@ -11,6 +11,15 @@ export const GetUser = createParamDecorator((data: string | null, ctx: Execution
   return request.user;
 });
 
+/** Viewer id on @Public() routes; null when the request is anonymous. */
+export const GetOptionalUserId = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): number | null => {
+    const request: Express.Request = ctx.switchToHttp().getRequest();
+    const user = request.user as { id?: number } | null | undefined;
+    return typeof user?.id === 'number' ? user.id : null;
+  },
+);
+
 export const CHECK_ABILITY_KEY = 'check_ability';
 
 export interface RequiredAbility {
@@ -20,3 +29,5 @@ export interface RequiredAbility {
 
 export const CheckAbility = (...requirements: RequiredAbility[]) =>
   SetMetadata(CHECK_ABILITY_KEY, requirements);
+
+export * from './public.decorator';

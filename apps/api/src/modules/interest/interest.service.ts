@@ -15,6 +15,7 @@ import {
   RespondInterestDto,
   SendInterestDto,
 } from './dto/index';
+import { MutualMatchService } from './mutual-match.service';
 
 const PROFILE_CARD_SELECT = {
   id: true,
@@ -44,6 +45,9 @@ export class InterestService {
 
   @Inject()
   private readonly featureGate: FeatureGateService;
+
+  @Inject()
+  private readonly mutualMatch: MutualMatchService;
 
   // ---------- helpers ----------
 
@@ -349,6 +353,8 @@ export class InterestService {
       create: { ownerProfileId: profileId, targetProfileId },
     });
 
+    await this.mutualMatch.detectAfterShortlist(profileId, targetProfileId);
+
     return createSuccessResult(data, 'Profile shortlisted');
   }
 
@@ -374,6 +380,14 @@ export class InterestService {
     });
 
     return createSuccessResult(items, 'Shortlist retrieved successfully');
+  }
+
+  async listMutualMatches(userId: number): Promise<ServiceResult> {
+    const { profileId, error } = await this.resolveActingProfile(userId);
+    if (error || !profileId) return error!;
+
+    const items = await this.mutualMatch.listForProfile(profileId);
+    return createSuccessResult({ count: items.length, items }, 'Mutual matches retrieved');
   }
 
   async addFavourite(userId: number, targetProfileId: number): Promise<ServiceResult> {

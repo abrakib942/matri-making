@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
 import { HashService } from '../src/util/hash.service';
 import { BANGLADESH, DIVISIONS } from './seed-data/locations';
+import { seedDemoProfiles } from './seed-data/demo-profiles';
 
 const connectionString = `${process.env.POSTGRES_DATABASE_URL}`;
 const adapter = new PrismaPg({ connectionString });
@@ -308,6 +309,7 @@ async function main() {
     await seedSuperAdminUser(roleMap);
     await seedLocations();
     await seedPlansAndPackages();
+    await seedDemoProfiles(prisma);
   } catch (error) {
     console.error('Seeding error:', error);
   }
